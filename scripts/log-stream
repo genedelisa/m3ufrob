@@ -1,0 +1,20 @@
+#!/usr/bin/env zsh
+
+local subsystem="com.rockhoppertech.m3ufrob"
+# local subsystem=com.rockhoppertech.terminalColorTester
+
+local format='subsystem == "%s"'
+printf -v predicate $format $subsystem
+
+/usr/bin/log stream --predicate $predicate \
+	     --type log --level debug --color always --style compact
+
+
+
+#log stream --predicate '(subsystem == "com.rockhoppertech.m3ufrob") && (category == "m3ufrobService")' --debug --info --color always --style json
+
+#log stream --predicate '(subsystem == "com.rockhoppertech.m3ufrob") && (category == "m3ufrobService")' --level debug --color always --style compact --type log
+
+
+
+#/usr/bin/log stream --predicate 'process == "com.rockhoppertech.m3ufrob"' --info --debug --last 1m --color always --style json

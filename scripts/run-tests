@@ -1,0 +1,213 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-shell: zsh; sh-indentation: 4; sh-basic-offset: 4; coding: utf-8; -*-
+# vim: ft=zsh:sw=4:ts=4:et
+#
+# Time-stamp: "Last Modified 2023-03-12 13:44:57 by Gene De Lisa, genedelisa"
+#
+# File: run-tests
+# Description: run tests for m3ufrob
+# script_version=0.1.0
+#
+# Gene De Lisa
+# gene@rockhoppertech.com
+# http://rockhoppertech.com/blog/
+# License - http://unlicense.org
+################################################################################
+# https://google.github.io/styleguide/shellguide.html#s7-naming-conventions
+################################################################################
+
+
+# -R reset zsh options
+# -L options LOCAL_OPTIONS, LOCAL_PATTERNS and LOCAL_TRAPS will be set
+emulate -LR zsh
+typeset -r version=0.1.0
+
+autoload -Uz zsh-color-messages && zsh-color-messages
+# this must be set to see the messages
+ZSH_DEBUG_PRINT=t
+
+local SCRIPT_NAME=${ZSH_SCRIPT:t:r}
+
+local scheme="m3ufrob"
+#local scheme="terminalColorTester"
+
+local ios_destination="platform=iOS Simulator,OS=14.5,name=iPad (8th generation)"
+
+local MACHINE_ARCH=$(uname -m)
+
+local macos_destination="platform=macOS,arch=$MACHINE_ARCH"
+#local macos_destination="platform=macOS,arch=arm64,id=00008103-001609A10162001E"
+
+(( $+commands[xcodebuild] )) || {
+    >&2 print "You need xcodebuild to be installed."
+    return 1
+}
+
+test_ios() {
+
+    xcodebuild clean test \
+	       -scheme ${scheme} \
+	       -destination ${ios_destination} \
+	       CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO
+    return ${status}
+}
+
+test_macos() {
+    # it's a package, so you specify the directory as a workspace.
+    xcodebuild clean test \
+	       -scheme ${scheme} \
+	       -destination ${macos_destination} \
+	       -workspace ../ \
+	       -quiet
+
+    return ${status}
+}
+
+select_test() {
+    # running from the scripts directory, so set the package path
+    local tests=$(xcrun swift test -l --package-path .. 2>/dev/null)
+
+    PS3="$fg[Chartreuse1]Choose the input file ${reset_color}"
+    print -n "$fg[Cyan1]"
+
+    [[ -z $tests ]] && {
+	error_message "There are no tests in this project!"
+	exit 1
+    }
+
+    # I'm adding Quit to the options
+    local integer last=$(( ${#tests[@]}+1 ))
+
+    { # try
+	select the_test in ${tests[@]} "Quit"
+	do
+	    # reply is the number
+	    [[ $REPLY -eq $last ]] && {
+		exit 1
+	    }
+
+	    [[ $REPLY -gt 0 ]] && [[ $REPLY -le $last ]] && {
+		# the list has a . in the name. xcodebuils wants a /
+		the_test=${the_test:gs/\./\/}
+		zsh_message "You chose $the_test"
+
+		# without this return, select will "loop"
+		return 0
+
+	    } || {
+		zsh_message -tfg red -tbg yellow "$REPLY is out of range (between 1 and less than $last)"
+	    }
+	done
+
+    } always {
+	print -n "${reset_color}"
+	# reset any error i.e. ignore them
+	(( TRY_BLOCK_ERROR = 0 ))
+    }
+
+}
+
+# ./runtests.zsh -s testPrintPaletteFg
+# ./runtests.zsh -o
+test_macos_onetest() {
+    local the_test=$1
+
+    [[ -z ${1} ]] && {
+	zsh_debug_message "No test specified. Selecting"
+	select_test
+    }
+    zsh_message "Running single testname: $the_test"
+
+    # local bin_path="$(swift build --show-bin-path)"
+    # local xctest_path="$(find ${BIN_PATH} -name '*.xctest')"
+    # print "bin path $bin_path"
+    # print "test path $xctest_path"
+
+    #    xcodebuild clean test
+    xcodebuild test \
+               -scheme ${scheme} \
+               -destination ${macos_destination} \
+	       -workspace ../ \
+               -only-testing $the_test \
+	       -configuration Debug \
+	       -quiet
+
+    return ${status}
+}
+
+
+usage() {
+    readonly local help_text="""
+Run the tests.
+Requires that you specify macos or ios or both
+
+Usage: ${SCRIPT_NAME} flags
+Flags:
+  -h or --help			Print usage information
+  -m or --macos
+  -i or --ios
+  -s or --mac-single testname	Run just the specified test
+  -o or --one			Run one chosen test
+
+
+e.g.
+
+$SCRIPT_NAME -o
+$SCRIPT_NAME -s terminalColorTesterTests/terminalColorTesterTests/testExample
+"""
+    print ${help_text}
+    exit 0
+}
+
+
+main() {
+    zparseopts -a runtests_options -D -E -- \
+               h=help_opt           -help=help_opt \
+               v=verbose_opt        -verbose=verbose_opt \
+               m=mac_opt            -mac=mac_opt \
+               i=ios_opt            -ios=ios_opt \
+               o=one_opt            -one=one_opt \
+               s:=mac_single_opt   -mac-single:=mac_single_opt \
+	|| {
+
+	error_message "zparseopts error" ${status}
+	usage
+	exit 1
+    }
+
+    [[ -n ${help_opt} ]] && {usage}
+
+    [[ -n ${mac_opt} ]] && {
+	test_macos
+	return ${status}
+    }
+
+    [[ -n ${ios_opt} ]] && {
+	test_ios
+	return ${status}
+    }
+
+    [[ -n ${one_opt} ]] && {
+        test_macos_onetest
+	return ${status}
+    }
+
+    [[ ${#mac_single_opt} -ge 2 ]] && {
+        testname=${${mac_single_opt:+"${mac_single_opt[2]/#=/}"}}
+	zsh_message "cmd line test name: $testname"
+        test_macos_onetest $testname
+	return ${status}
+    }
+
+}
+
+
+###############################################################################
+# The main flow
+###############################################################################
+
+# requires at least one arg
+[[ $# -lt 1 ]] && usage
+
+main "${@}"
+return ${status}

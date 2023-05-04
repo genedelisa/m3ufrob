@@ -1,0 +1,172 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-shell: zsh; sh-indentation: 4; sh-basic-offset: 4; coding: utf-8; -*-
+# vim: ft=zsh:sw=4:ts=4:et
+#
+# Time-stamp: "Last Modified 2023-03-12 13:43:48 by Gene De Lisa, genedelisa"
+#
+# File: log-set-level
+# Description: set the logging level for m3ufrob
+# script_version=0.1.0
+#
+# Gene De Lisa
+# gene@rockhoppertech.com
+# http://rockhoppertech.com/blog/
+# License - http://unlicense.org
+################################################################################
+# https://google.github.io/styleguide/shellguide.html#s7-naming-conventions
+################################################################################
+# https://developer.apple.com/documentation/os/logging
+# https://developer.apple.com/documentation/os/oslog
+
+# this will write a binary plist to /Library/Preferences/Logging/Subsystems
+
+#TODO: categories
+
+typeset -r version=0.1.0
+
+# -R reset zsh options
+# -L options LOCAL_OPTIONS, LOCAL_PATTERNS and LOCAL_TRAPS will be set
+emulate -LR zsh
+
+autoload -Uz 256colors && 256colors
+autoload -Uz zsh-color-messages && zsh-color-messages
+
+local level=""
+local subsystem="com.rockhoppertech.m3ufrob"
+# local subsystem=com.rockhoppertech.terminalColorTester
+
+
+###############################################################################
+# Print the version to stdout
+################################################################################
+show_version() {
+    zsh_message -l "Version" -t "${version}"
+}
+
+###############################################################################
+# Select menu to choose the level
+################################################################################
+choose_level() {
+
+    PS3="$fg[yellow]Which level do you want to set? ${reset_color}"
+
+    select result in debug info Quit
+    do
+	case $result in
+	    debug )
+		zsh_message -lfg yellow -lbg blue -tfg yellow -tbg blue -l "level" -t "${result}"
+		level="level:debug"
+		break ;;
+
+	    info )
+		zsh_message -tfg yellow -tbg blue -t "level: ${result}"
+		level="level:info"
+		break ;;
+            Quit )
+		exit 0
+		break ;;
+
+            * ) error_message "${REPLY} Unknown choice"
+		builtin read -q "response?Quit? [y/N]  "; print
+		[[ ${(U)response} == "Y"  ]] && {
+		    exit 0
+		}
+		;;
+
+	esac
+
+    done
+
+    return ${status}
+}
+
+
+###############################################################################
+# Print a help/usage message
+################################################################################
+
+usage() {
+    readonly local help_text="""
+Set the logging level.
+
+Usage: ${SCRIPT_NAME} flags
+Flags:
+  -h or --help           Print usage information
+  -d or --debug
+  -i or --info
+"""
+    print ${help_text}
+    exit 0
+}
+
+###############################################################################
+# Parse command line
+################################################################################
+parse() {
+
+    zparseopts -a setLoggingLevel_options -D -E -F -- \
+               h=help_opt           -help=help_opt \
+               v=version_opt        -version=version_opt \
+               d=debug_opt          -debug=debug_opt \
+               i=info_opt           -info=info_opt \
+	|| {
+
+	error_message "zparseopts error" ${status}
+	usage
+	exit 1
+    }
+
+    [[ -n ${help_opt} ]] && {usage}
+
+    [[ -n ${version_opt} ]] && {
+	show_version
+	exit 0
+    }
+
+    [[ -n ${debug_opt} ]] && {
+	level="level:debug"
+    }
+
+    [[ -n ${version_opt} ]] && {
+	show_version
+	exit 0
+    }
+
+    [[ -n ${info_opt} ]] && {
+	level="level:info"
+    }
+
+    return ${status}
+}
+
+###############################################################################
+# Main workflow. Handles cmdline args and falls back to a menu without args.
+################################################################################
+main() {
+
+    [[ $# -lt 1 ]] &&  {
+	choose_level
+    } || {
+	parse "${@}"
+    }
+
+    [[ -z ${level} ]] && {
+	error_message "Level not specified"
+	exit 1
+    }
+
+    print -- "sudo /usr/bin/log config --mode ${level} --subsystem $subsystem"
+    sudo /usr/bin/log config --mode ${level} --subsystem $subsystem
+    #sudo log config --mode "level:debug,persist:debug" --subsystem $subsystem
+
+    # check
+    sudo log config --status --subsystem $subsystem
+    return ${status}
+}
+
+
+###############################################################################
+# Do it!
+###############################################################################
+main "${@}"
+exit $status

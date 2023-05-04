@@ -1,0 +1,7 @@
+#!/usr/bin/env zsh
+
+docker run --rm --privileged --interactive --tty \
+    --volume "$(pwd):/Sources" \
+    --workdir "/Sources" \
+    swift:latest
+

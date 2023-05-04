@@ -1,0 +1,205 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-shell: zsh; sh-indentation: 4; sh-basic-offset: 4; coding: utf-8; -*-
+# vim: ft=zsh:sw=4:ts=4:et
+#
+# Time-stamp: "Last Modified 2023-03-16 06:36:38 by Gene De Lisa, genedelisa"
+#
+# File: log-show
+# Description: show the logs for m3ufrob
+#
+# script_version=0.1.0
+#
+# Gene De Lisa
+# gene@rockhoppertech.com
+# http://rockhoppertech.com/blog/
+# License - http://unlicense.org
+################################################################################
+# https://google.github.io/styleguide/shellguide.html#s7-naming-conventions
+# https://developer.apple.com/documentation/os/logging
+# https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Predicates/AdditionalChapters/Introduction.html
+
+local SCRIPT_NAME=${ZSH_SCRIPT:t:r}
+
+local subsystem="com.rockhoppertech.m3ufrob"
+local sender="m3ufrob"
+
+# local subsystem="com.rockhoppertech.terminalColorTester"
+# local sender="terminalColorTester"
+
+# sender is the name of the app
+# subsystem is the package name
+
+
+interactive() {
+    print "$SCRIPT_NAME:$0:"
+
+    choose_style
+}
+
+choose_style() {
+    local -a choices=(compact json syslog)
+    local integer last=$(( ${#choices[@]}+1 ))
+    PS3="Choose the style: "
+    select style in ${choices[@]}
+    do
+	[[ $REPLY -gt 0 ]] && [[ $REPLY -le $last ]] && {
+
+	    print -- "You chose $style"
+	    # without this return, select will "loop"
+	    return 0
+
+	} || {
+	    print -- "$REPLY is out of range"
+	}
+    done
+
+    return 0
+}
+
+show() {
+    setopt localoptions
+    local -A options
+    zparseopts -a options -D -E -F -- \
+	       {v,-verbose}=verbose_opt \
+	       {i,-interactive}=interactive_opt \
+               {m,-message}=message_opt \
+	       {u,-subsystem}:=subsystem_opt \
+	       {e,-sender}:=sender_opt \
+	       {s,-style}:=style_opt \
+	       {c,-category}:=category_opt \
+	       {t,-time}:=time_opt \
+	|| {
+	print -- "$SCRIPT_NAME: zparseopts error" ${status} >&2
+	return 1
+    }
+
+
+    local time_interval="1h"
+    [[ ${#time_opt} -ge 2 ]] && {
+	time_interval=${${time_opt:+"${time_opt[2]/#=/}"}}
+	[[ -n $verbose_opt ]] && {
+	    print -- "$SCRIPT_NAME:$0: time: ${time_interval} from flag"
+	}
+    }
+
+    [[ ${#subsystem_opt} -ge 2 ]] && {
+	subsystem=${${subsystem_opt:+"${subsystem_opt[2]/#=/}"}}
+	[[ -n $verbose_opt ]] && {
+	    print -- "$SCRIPT_NAME:$0: subsystem: ${subsystem} from flag"
+	}
+    }
+
+    # compact, syslog, json
+    local style="compact"
+    [[ ${#style_opt} -ge 2 ]] && {
+	style=${${style_opt:+"${style_opt[2]/#=/}"}}
+	[[ -n $verbose_opt ]] && {
+	    print -- "$SCRIPT_NAME:$0: style: ${style} from flag"
+	}
+    }
+
+    local category
+    [[ ${#category_opt} -ge 2 ]] && {
+	category=${${category_opt:+"${category_opt[2]/#=/}"}}
+	[[ -n $verbose_opt ]] && {
+	    print -- "$SCRIPT_NAME:$0: category: ${category} from flag"
+	}
+    }
+
+    [[ ${#sender_opt} -ge 2 ]] && {
+	sender=${${sender_opt:+"${sender_opt[2]/#=/}"}}
+	[[ -n $verbose_opt ]] && {
+	    print -- "$SCRIPT_NAME:$0: sender: ${sender} from flag"
+	}
+    }
+
+    [[ -n ${interactive_opt} ]] && {
+	builtin read -q "response?Do it? [y/N] "; print
+	[[ ${(U)response} != "Y"  ]] && {
+	    >&2 print
+	    >&2 print -- "Groovy. Later"
+	    return 0
+	} || {
+	    interactive
+	    return $status
+	}
+    }
+
+    local color="always"
+
+    local args=(show)
+    args+="--info"
+    args+="--debug"
+
+    args+="--style"
+    args+="$style"
+
+    args+="--last"
+    args+="$time_interval"
+
+    args+="--color"
+    args+="$color"
+
+
+    local format='sender == "%s"'
+    printf -v predicate $format $sender
+
+    [[ -n ${category} ]] && {
+	format='sender == "%s" && (category="%s")'
+	printf -v predicate $format $sender $category
+    }
+
+    [[ -n $verbose_opt ]] && {
+	print -- "${args[@]}"
+	print -- predicate: $predicate
+    }
+
+    [[ -n $message_opt ]] && {
+	# show just the message
+        /usr/bin/log "${args[@]}" \
+		     --predicate $predicate  | cut -d' ' -f6-
+    } || {
+	/usr/bin/log "${args[@]}" \
+		     --predicate $predicate
+    }
+
+    return $rs
+}
+# "$*" always expands to something, even without arguments
+show "${@}"
+return $status
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#log show --predicate '(eventMessage CONTAINS "Authentication failed")' --style syslog --last 1d
+
+
+#	     --predicate "(subsystem == $subsystem)"
+
+# /usr/bin/log show --style compact --info --debug \
+    # 	     --last 1h \
+    # 	     --predicate '(subsystem == $subsystem)'
+
+
+#/usr/bin/log show --style compact --info --debug --last 1h --predicate 'subsystem == "com.rockhoppertech.m3ufrob" && eventMessage CONTAINS[c] "server"'
+
+#/usr/bin/log show --info --debug --predicate '(subsystem == "com.rockhoppertech.m3ufrob") && (category == "UI")' --style compact
+
+#--start '2020-10-07 16:55:00' --end '2020-10-07 16:59:00'
+
+#    --predicate '(subsystem == "com.rockhoppertech.terminalColorTester") && (category == "Color")'
+
+#		 --predicate 'sender == "terminalColorTester"'
+#	     --predicate '(subsystem == "com.rockhoppertech.terminalColorTester")'

@@ -1,0 +1,25 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-shell: zsh; sh-indentation: 4; sh-basic-offset: 4; coding: utf-8; -*-
+# vim: ft=zsh:sw=4:ts=4:et
+#
+# Time-stamp: "Last Modified 2023-03-12 13:42:08 by Gene De Lisa, genedelisa"
+#
+# File: log-get-level
+# Description: get the logging level for m3ufrob
+# script_version=0.1.0
+#
+# Gene De Lisa
+# gene@rockhoppertech.com
+# http://rockhoppertech.com/blog/
+# License - http://unlicense.org
+################################################################################
+# https://google.github.io/styleguide/shellguide.html#s7-naming-conventions
+################################################################################
+#
+
+local subsystem="com.rockhoppertech.m3ufrob"
+# local subsystem=com.rockhoppertech.terminalColorTester
+
+sudo /usr/bin/log config --status \
+     --subsystem $subsystem
+return $status

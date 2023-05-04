@@ -1,0 +1,50 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-shell: zsh; sh-indentation: 4; sh-basic-offset: 4; coding: utf-8; -*-
+# vim: ft=zsh:sw=4:ts=4:et
+#
+# Time-stamp: "Last Modified 2023-03-10 06:05:00 by Gene De Lisa, genedelisa"
+#
+# File: generate-code-coverage.zsh
+#
+# Description: generate code coverage for m3ufrob
+#
+# llvm (which also installs llvm-cov) should be installed
+# macos install:
+# brew install llvm
+#
+# script_version=0.1.0
+#
+# Gene De Lisa
+# gene@rockhoppertech.com
+# http://rockhoppertech.com/blog/
+# License - http://unlicense.org
+################################################################################
+# https://google.github.io/styleguide/shellguide.html#s7-naming-conventions
+# See: https://blog.bitrise.io/code-coverage-for-swift-package-manager-based-apps
+################################################################################
+
+# -R reset zsh options
+# -L options LOCAL_OPTIONS, LOCAL_PATTERNS and LOCAL_TRAPS will be set
+emulate -LR zsh
+
+typeset -r version=0.1.0
+
+local SCRIPT_NAME=${ZSH_SCRIPT:t:r}
+
+local cov=$(brew --prefix llvm)/bin/llvm-cov
+
+local bin_path="$(swift build --show-bin-path)"
+local xctest_path="$(find ${BIN_PATH} -name '*.xctest')"
+local cov_bin=$xctest_path
+
+[[ "$OSTYPE" == "darwin"* ]] && {
+    local f="$(basename $xctest_path .xctest)"
+    cov_bin="${cov_bin}/Contents/MacOS/$f"
+}
+
+# llvm-cov report
+$cov report \
+     "${cov_bin}" \
+     -instr-profile=.build/debug/codecov/default.profdata \
+     -ignore-filename-regex=".build|Tests" \
+     -use-color

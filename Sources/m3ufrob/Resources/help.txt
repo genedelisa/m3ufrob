@@ -1,0 +1,18 @@
+hncli: Hacker News Command Line Interface.
+
+Clever name, huh?
+
+The HN API is a bit unusual. There are only GET requests and there is no way to retrieve many items are once.
+So, there will be as many requests sent up to the fetch-limit variable.
+
+$ xcrun swift run hncli
+
+will run with the default values. Five new items will be retrieved.
+
+$ xcrun swift run hncli --top
+
+Specifies that you want the top items and not the new items.
+
+$ xcrun swift run hncli --top --fetch-limit 10
+
+Specifies that you want 10 top items.

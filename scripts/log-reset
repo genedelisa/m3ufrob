@@ -1,0 +1,79 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-shell: zsh; sh-indentation: 4; sh-basic-offset: 4; coding: utf-8; -*-
+# vim: ft=zsh:sw=4:ts=4:et
+#
+# Time-stamp: "Last Modified 2023-03-12 13:52:26 by Gene De Lisa, genedelisa"
+#
+# File: log-reset
+# Description: reset the logging for m3ufrob
+#
+# script_version=0.1.0
+#
+# Gene De Lisa
+# gene@rockhoppertech.com
+# http://rockhoppertech.com/blog/
+# License - http://unlicense.org
+################################################################################
+# https://google.github.io/styleguide/shellguide.html#s7-naming-conventions
+# https://developer.apple.com/documentation/os/logging
+# https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Predicates/AdditionalChapters/Introduction.html
+
+local SCRIPT_NAME=${ZSH_SCRIPT:t:r}
+
+local subsystem="com.rockhoppertech.m3ufrob"
+local sender="m3ufrob"
+
+# local subsystem="com.rockhoppertech.terminalColorTester"
+# local sender="terminalColorTester"
+local category
+
+main() {
+    setopt localoptions
+    local -A options
+    zparseopts -a options -D -E -F -- \
+	       {v,-verbose}=verbose_opt \
+	       {i,-interactive}=interactive_opt \
+	       {u,-subsystem}:=subsystem_opt \
+	       {e,-sender}:=sender_opt \
+	       {c,-category}:=category_opt \
+	|| {
+	print -- "$SCRIPT_NAME: zparseopts error" ${status} >&2
+	return 1
+    }
+
+    [[ ${#subsystem_opt} -ge 2 ]] && {
+	subsystem=${${subsystem_opt:+"${subsystem_opt[2]/#=/}"}}
+	[[ -n $verbose_opt ]] && {
+	    print -- "$SCRIPT_NAME:$0: subsystem: ${subsystem} from flag"
+	}
+    }
+
+    local category
+    [[ ${#category_opt} -ge 2 ]] && {
+	category=${${category_opt:+"${category_opt[2]/#=/}"}}
+	[[ -n $verbose_opt ]] && {
+	    print -- "$SCRIPT_NAME:$0: category: ${category} from flag"
+	}
+    }
+
+    [[ ${#sender_opt} -ge 2 ]] && {
+	sender=${${sender_opt:+"${sender_opt[2]/#=/}"}}
+	[[ -n $verbose_opt ]] && {
+	    print -- "$SCRIPT_NAME:$0: sender: ${sender} from flag"
+	}
+    }
+
+    [[ -n ${category} ]] && {
+	sudo log config --status --subsystem $subsystem --category $category
+    } || {
+	sudo log config --status --subsystem $subsystem
+    }
+
+
+    return $status
+}
+
+
+# "$*" always expands to something, even without arguments
+main "${@}"
+return $status

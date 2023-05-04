@@ -1,0 +1,26 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-shell: zsh; sh-indentation: 4; sh-basic-offset: 4; coding: utf-8; -*-
+# vim: ft=zsh:sw=4:ts=4:et
+#
+# Time-stamp: "Last Modified 2023-03-10 06:05:44 by Gene De Lisa, genedelisa"
+#
+#
+# File: test-with-coverage
+# Description: This script runs all tests with code coverage
+#
+# Gene De Lisa
+# gene@rockhoppertech.com
+# http://rockhoppertech.com/blog/
+# License - http://unlicense.org
+################################################################################
+# run figlet to get banner
+################################################################################
+
+# -R reset zsh options
+# -L options LOCAL_OPTIONS, LOCAL_PATTERNS and LOCAL_TRAPS will be set
+emulate -LR zsh
+
+#autoload -Uz zsh-color-messages && zsh-color-messages
+
+xcrun swift test --enable-code-coverage
+return $status

@@ -1,0 +1,11 @@
+# swiftformat
+# https://github.com/nicklockwood/SwiftFormat/blob/master/Rules.md
+
+
+# Wrap braces in accordance with selected style (K&R or Allman).
+--allman false
+
+
+# Place else, catch or while keyword in accordance with current style (same or next line).
+--elseposition same-line
+--guardelse same-line

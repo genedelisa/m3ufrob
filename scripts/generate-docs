@@ -1,0 +1,36 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-shell: zsh; sh-indentation: 4; sh-basic-offset: 4; coding: utf-8; -*-
+# vim: ft=zsh:sw=4:ts=4:et
+#
+# Time-stamp: "Last Modified 2023-03-12 13:41:55 by Gene De Lisa, genedelisa"
+#
+# File: generate-docs
+# Description: generate docs for  m3ufrob
+#
+# script_version=0.1.0
+#
+# Gene De Lisa
+# gene@rockhoppertech.com
+# http://rockhoppertech.com/blog/
+# License - http://unlicense.org
+################################################################################
+# https://google.github.io/styleguide/shellguide.html#s7-naming-conventions
+################################################################################
+
+typeset -r version=0.1.0
+
+
+local target=m3ufrob
+local packageNameID=com.rockhoppertech.m3ufrob
+# local target=terminalColorTester
+# local packageNameID=com.rockhoppertech.terminalColorTester
+
+# https://apple.github.io/swift-docc-plugin/documentation/swiftdoccplugin/
+
+xcrun swift package generate-documentation
+
+xcrun swift package --disable-sandbox preview-documentation --target $target
+
+open -a Safari http://localhost:8000/documentation/$target
+
+exit ${status}
