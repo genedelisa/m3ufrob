@@ -16,9 +16,7 @@
 
 [![Platforms][platforms-macos-shield]][platforms-macos-url]
 [![Swift 5][swift5-shield]][swift5-url]
-[![SwiftPM][swiftPM-shield]][swiftPM-url]
 
-[![Xcode Build][xcodebuild-shield]][xcodebuild-url]
 
 [![Tweet][tweet-shield]][tweet-url]
 
@@ -51,8 +49,6 @@ This is a Swift command line app to manipulate m3u playlists
 
 ```bash
 xcrun swift run m3ufrob sort -v foo.m3u8 -o foosorted.m3u8
-...
-
 ```
 
 ## Logging
