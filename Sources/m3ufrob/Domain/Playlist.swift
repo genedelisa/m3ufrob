@@ -121,7 +121,8 @@ public class Playlist: Identifiable, ObservableObject {
         var results = [PlaylistEntry]()
         
         // # is a swift 5 raw string to avoid escaping.
-        let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
+//        let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
+        let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?[0-9]+),\s*(.*)"#
         
         var entry = PlaylistEntry()
         

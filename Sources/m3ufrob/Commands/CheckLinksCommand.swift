@@ -93,6 +93,15 @@ extension MainCommand {
                     if commonOptions.verbose {
                         print("status \(httpResponse.statusCode) for url \(url.absoluteString)")
                     }
+                    switch httpResponse.statusCode {
+                    case 400:
+                        print("400 Bad Request \(url)".fg(.red))
+                    case 403:
+                        print("403 Forbidden: \(url)".fg(.red))
+                    default: break
+                    }
+                    // 400 and 403 are common too. 403 is forbidden, i.e. no permission
+                    // 400 is "bad request"
                     return httpResponse.statusCode == 200
                 } else {
                     return false
