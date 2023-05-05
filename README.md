@@ -1,4 +1,4 @@
-# createm3u8
+# m3ufrob
 
 <!-- PROJECT SHIELDS -->
 <!--
@@ -14,7 +14,7 @@
 [![Forks][forks-shield]][forks-url]
 [![Issues][issues-shield]][issues-url]
 
-[![Platforms][platforms-ios-shield]][platforms-ios-url]
+[![Platforms][platforms-macos-shield]][platforms-macos-url]
 [![Swift 5][swift5-shield]][swift5-url]
 [![SwiftPM][swiftPM-shield]][swiftPM-url]
 
@@ -37,7 +37,7 @@
 
 ## Summary
 
-This is a Swift command line app.
+This is a Swift command line app to manipulate m3u playlists
 
 [Project Documentation][github-pages]
 
@@ -48,12 +48,9 @@ This is a Swift command line app.
 
 
 ## Usage
-Read the blog post. Or just read the code.
 
-e.g. playing a system sound.
-
-```swift
-import createm3u8
+```bash
+xcrun swift run m3ufrob sort -v foo.m3u8 -o foosorted.m3u8
 ...
 
 ```
@@ -63,22 +60,22 @@ import createm3u8
 
 ### Set logging level
 ```
-sudo /usr/bin/log config --mode "level:default" --subsystem com.rockhoppertech.createm3u8
-sudo /usr/bin/log config --mode "level:info" --subsystem com.rockhoppertech.createm3u8
-sudo /usr/bin/log config --mode "level:debug" --subsystem com.rockhoppertech.createm3u8
+sudo /usr/bin/log config --mode "level:default" --subsystem com.rockhoppertech.m3ufrob
+sudo /usr/bin/log config --mode "level:info" --subsystem com.rockhoppertech.m3ufrob
+sudo /usr/bin/log config --mode "level:debug" --subsystem com.rockhoppertech.m3ufrob
 ```
 
 ### See the logs
 ```
-log show --info --debug --predicate '(subsystem == "com.rockhoppertech.createm3u8")' --style compact
-log show --info --debug --predicate '(subsystem == "com.rockhoppertech.createm3u8") && (category == "Color256")'
+log show --info --debug --predicate '(subsystem == "com.rockhoppertech.m3ufrob")' --style compact
+log show --info --debug --predicate '(subsystem == "com.rockhoppertech.m3ufrob") && (category == "Color256")'
 ```
 
 Or, in a separate window, stream the logs to stdout when you run the program.
 ```
-log stream --predicate '(subsystem == "com.rockhoppertech.createm3u8")' --type log --level debug --color always --style compact
+log stream --predicate '(subsystem == "com.rockhoppertech.m3ufrob")' --type log --level debug --color always --style compact
 
-log stream --predicate '(subsystem == "com.rockhoppertech.createm3u8") && (category == "Color24")' --type log --level debug --style json
+log stream --predicate '(subsystem == "com.rockhoppertech.m3ufrob") && (category == "Color24")' --type log --level debug --style json
 ```
 
 ### Logging References
@@ -133,23 +130,23 @@ Please read the [LICENSE](LICENSE) for details.
 <!-- Markdown Reference Links & Images -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[contributors-shield]: https://img.shields.io/github/contributors/genedelisa/createm3u8.svg?style=flat
-[contributors-url]: https://github.com/genedelisa/createm3u8/graphs/contributors
+[contributors-shield]: https://img.shields.io/github/contributors/genedelisa/m3ufrob.svg?style=flat
+[contributors-url]: https://github.com/genedelisa/m3ufrob/graphs/contributors
 
-[forks-shield]: https://img.shields.io/github/forks/genedelisa/createm3u8.svg?style=flat
-[forks-url]: https://github.com/genedelisa/createm3u8/network/members
+[forks-shield]: https://img.shields.io/github/forks/genedelisa/m3ufrob.svg?style=flat
+[forks-url]: https://github.com/genedelisa/m3ufrob/network/members
 
-[stars-shield]: https://img.shields.io/github/stars/genedelisa/createm3u8.svg?style=flat
-[stars-url]: https://github.com/genedelisa/createm3u8/stargazers
+[stars-shield]: https://img.shields.io/github/stars/genedelisa/m3ufrob.svg?style=flat
+[stars-url]: https://github.com/genedelisa/m3ufrob/stargazers
 
-[issues-shield]: https://img.shields.io/github/issues/genedelisa/createm3u8.svg?style=flat
-[issues-url]: https://github.com/genedelisa/createm3u8/issues
+[issues-shield]: https://img.shields.io/github/issues/genedelisa/m3ufrob.svg?style=flat
+[issues-url]: https://github.com/genedelisa/m3ufrob/issues
 
-[downloads-shield]:https://img.shields.io/github/downloads/genedelisa/createm3u8/total
-[downloads-url]: https://github.com/genedelisa/createm3u8/releases/
+[downloads-shield]:https://img.shields.io/github/downloads/genedelisa/m3ufrob/total
+[downloads-url]: https://github.com/genedelisa/m3ufrob/releases/
 
-[license-shield]: https://img.shields.io/github/license/genedelisa/createm3u8.svg?style=flat
-[license-url]: https://github.com/genedelisa/createm3u8/blob/main/LICENSE
+[license-shield]: https://img.shields.io/github/license/genedelisa/m3ufrob.svg?style=flat
+[license-url]: https://github.com/genedelisa/m3ufrob/blob/main/LICENSE
 
 [MIT-license-wiki-url]:https://en.wikipedia.org/wiki/MIT_License
 
@@ -162,27 +159,27 @@ Please read the [LICENSE](LICENSE) for details.
 [twitter-shield]:https://img.shields.io/twitter/follow/GeneDeLisaDev.svg?style=social
 [twitter-url]: https://twitter.com/GeneDeLisaDev
 
-[build-status-shield]:https://travis-ci.org/genedelisa/createm3u8.svg
-[build-status-url]:https://travis-ci.org/genedelisa/createm3u8
-[travis-status-url]:https://img.shields.io/travis/com/genedelisa/createm3u8?style=for-the-badge
-[circleci-status-url]:https://img.shields.io/circleci/build/github/genedelisa/createm3u8
+[build-status-shield]:https://travis-ci.org/genedelisa/m3ufrob.svg
+[build-status-url]:https://travis-ci.org/genedelisa/m3ufrob
+[travis-status-url]:https://img.shields.io/travis/com/genedelisa/m3ufrob?style=for-the-badge
+[circleci-status-url]:https://img.shields.io/circleci/build/github/genedelisa/m3ufrob
 
-[github-tag-shield]:https://img.shields.io/github/tag/genedelisa/createm3u8.svg
-[github-tag-url]:https://github.com/genedelisa/createm3u8/
+[github-tag-shield]:https://img.shields.io/github/tag/genedelisa/m3ufrob.svg
+[github-tag-url]:https://github.com/genedelisa/m3ufrob/
 
-[github-release-shield]:https://img.shields.io/github/release/genedelisa/createm3u8.svg
-[github-release-url]:https://github.com/genedelisa/createm3u8/
+[github-release-shield]:https://img.shields.io/github/release/genedelisa/m3ufrob.svg
+[github-release-url]:https://github.com/genedelisa/m3ufrob/
 
 [github-version-shield]:https://badge.fury.io/gh/genedelisa%2Fcreatem3u8
-[github-version-url]:https://github.com/genedelisa/createm3u8
+[github-version-url]:https://github.com/genedelisa/m3ufrob
 
-[github-last-commit]:https://img.shields.io/github/last-commit/genedelisa/createm3u8
+[github-last-commit]:https://img.shields.io/github/last-commit/genedelisa/m3ufrob
 
-[github-issues]:https://img.shields.io/github/issues-raw/genedelisa/createm3u8
-[github-closed-issues]:https://img.shields.io/github/issues-closed-raw/genedelisa/createm3u8
+[github-issues]:https://img.shields.io/github/issues-raw/genedelisa/m3ufrob
+[github-closed-issues]:https://img.shields.io/github/issues-closed-raw/genedelisa/m3ufrob
 
-[github-stars-shield]:https://img.shields.io/github/stars/genedelisa/createm3u8.svg?style=social&label=Star&maxAge=2592000
-[github-stars-url]:https://github.com/genedelisa/createm3u8/stargazers/
+[github-stars-shield]:https://img.shields.io/github/stars/genedelisa/m3ufrob.svg?style=social&label=Star&maxAge=2592000
+[github-stars-url]:https://github.com/genedelisa/m3ufrob/stargazers/
 
 [swift5-shield]:https://img.shields.io/badge/swift5-compatible-4BC51D.svg?style=flat
 [swift5-url]:https://developer.apple.com/swift
@@ -203,7 +200,7 @@ Please read the [LICENSE](LICENSE) for details.
 [stackoverflow-shield]:https://stackoverflow-badge.vercel.app/?userID=409891
 [stackoverflow-url]:https://stackoverflow.com/users/409891/gene-de-lisa
 
-[github-pages]:https://genedelisa.github.io/createm3u8/
+[github-pages]:https://genedelisa.github.io/m3ufrob/
 
 [blog-post-url]:http://www.rockhoppertech.com/blog/
 
@@ -213,14 +210,14 @@ Please read the [LICENSE](LICENSE) for details.
 [logger-docs]:https://developer.apple.com/documentation/os/logger
 
 
-[xcodebuild-shield]:https://github.com/genedelisa/createm3u8/actions/workflows/xcodebuild.yml/badge.svg
-[xcodebuild-url]:https://github.com/genedelisa/createm3u8/actions/workflows/xcodebuild.yml
+[xcodebuild-shield]:https://github.com/genedelisa/m3ufrob/actions/workflows/xcodebuild.yml/badge.svg
+[xcodebuild-url]:https://github.com/genedelisa/m3ufrob/actions/workflows/xcodebuild.yml
 
 [tweet-shield]:https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Fgenedelisa%2createm3u8
 [tweet-url]:https://twitter.com/intent/tweet?text=Cool:&url=https%3A%2F%2Fgithub.com%2Fgenedelisa%2Fcreatem3u8
 
-[packageindex-platforms-url]:https://swiftpackageindex.com/genedelisa/createm3u8%2Fbadge%3Ftype%3Dplatforms
+[packageindex-platforms-url]:https://swiftpackageindex.com/genedelisa/m3ufrob%2Fbadge%3Ftype%3Dplatforms
 [packageindex-platforms-shield]:https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgenedelisa%2Fcreatem3u8%2Fbadge%3Ftype%3Dplatforms
 
-[packageindex-swiftversions-url]:https://swiftpackageindex.com/genedelisa/createm3u8%2Fbadge%3Ftype%3Dswift-versions
+[packageindex-swiftversions-url]:https://swiftpackageindex.com/genedelisa/m3ufrob%2Fbadge%3Ftype%3Dswift-versions
 [packageindex-swiftversions-shield]:https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgenedelisa%2Fcreatem3u8%2Fbadge%3Ftype%3Dswift-versions
