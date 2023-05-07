@@ -25,7 +25,7 @@ import Combine
 import os.log
 import UniformTypeIdentifiers
 
-public  class PlaylistEntry: NSObject, ObservableObject, Identifiable {
+public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
     let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "PlaylistEntry")
     
     public var id: UUID = UUID()

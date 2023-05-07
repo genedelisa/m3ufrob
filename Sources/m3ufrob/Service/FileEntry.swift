@@ -54,18 +54,30 @@ public final class FileEntry: Identifiable, ObservableObject {
         guard FileManager.default.isReadableFile(atPath: fileURL.path) else {
             preconditionFailure("file at \(fileURL.absoluteString) is not readable")
         }
+        
+        do {
+            let contentsOfFile = try String(contentsOfFile: fileURL.path, encoding: .utf8)
+            let lines = contentsOfFile.components(separatedBy: .newlines)
+            self.playlistEntries = Playlist.parse(lines)
 
-        if let contentsOfFile = try? String(contentsOfFile: fileURL.path, encoding: .utf8) {
-            let components = contentsOfFile.components(separatedBy: .newlines)
-            self.playlistEntries = parse(array: components)
-            
-            for entry in playlistEntries {
-                print(" \(entry)")
-            }
-            
-        } else {
-            print("Could not read contents of \(fileURL)")
+            // TODO: don't need parse in this struct
+//            self.playlistEntries = parse(array: lines)
+        } catch  {
+            Logger.playlist.error("Could not read contents of \(self.fileURL, privacy: .public)")
+            Logger.playlist.error("\(error.localizedDescription, privacy: .public)")
         }
+
+//        if let contentsOfFile = try? String(contentsOfFile: fileURL.path, encoding: .utf8) {
+//            let components = contentsOfFile.components(separatedBy: .newlines)
+//            self.playlistEntries = parse(array: components)
+//
+////            for entry in playlistEntries {
+////                print(" \(entry)")
+////            }
+//
+//        } else {
+//            print("Could not read contents of \(fileURL)")
+//        }
     }
     
     // really simple minded. Just the extinf with dur and title and the url on the next line.
@@ -81,7 +93,8 @@ public final class FileEntry: Identifiable, ObservableObject {
         var results = [PlaylistEntry]()
 
         // # is a swift 5 raw string to avoid escaping.
-        let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
+        //let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
+        let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?[0-9]+),\s*(.*)"#
 
         var entry = PlaylistEntry()
         
@@ -114,15 +127,15 @@ public final class FileEntry: Identifiable, ObservableObject {
                                                             options: .regularExpression,
                                                             range: nil)
                 
-                print("title: '\(titleString)'")
-                print("duration: \(durationString)")
+                //print("fileentry title: '\(titleString)'")
+                //print("duration: \(durationString)")
                 entry.title = titleString
                 entry.duration = Double(durationString)!
                 parseState = .hasExtInf
             }
 
             else { // doesn't have prefix #EXT i.e. the url
-                print("non #EXT line: \(line)\n")
+                //print("non #EXT line: \(line)\n")
                 
                 if parseState == .hasExtInf {
                     entry.urlString = line

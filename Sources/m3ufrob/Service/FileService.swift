@@ -67,24 +67,6 @@ class FileService: FileServiceProtocol, ObservableObject {
         }
     }
     
-    static func checkLink(_ url: URL) async -> Bool {
-        
-        var request = URLRequest(url: url,
-                                 cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
-                                 timeoutInterval: 10.0)
-        request.httpMethod = "HEAD"
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            if let httpResponse = response as? HTTPURLResponse {
-                return httpResponse.statusCode == 200
-            } else {
-                return false
-            }
-        } catch {
-            print("Error checking link: \(error.localizedDescription)")
-            return false
-        }
-    }
 
     
     func add(fileEntry: FileEntry) {
@@ -181,5 +163,33 @@ class FileService: FileServiceProtocol, ObservableObject {
         }
         return []
     }
+    
+    func playlistFilesInDirectory(selectedFolderURL: URL) -> [FileEntry] {
+        
+        let keys: [URLResourceKey] = [
+            .isReadableKey
+        ]
+        
+        let options: FileManager.DirectoryEnumerationOptions = [
+            .skipsHiddenFiles
+        ]
+        
+        do {
+            let files = try FileManager.default.contentsOfDirectory(at: selectedFolderURL,
+                                                                    includingPropertiesForKeys: keys,
+                                                                    options: options)
+            let playlistFiles = files.filter {
+                ["m3u", "m3u8"]
+                    .contains($0.pathExtension.lowercased())
+            }
+            let entries = playlistFiles.map { FileEntry(fileURL: $0) }
+            return entries
+            
+        } catch {
+            logger.error("Error: \(error.localizedDescription)")
+        }
+        return []
+    }
+
     
 }

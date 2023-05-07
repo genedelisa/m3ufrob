@@ -50,6 +50,7 @@ public extension OSLog {
     static let error = OSLog(subsystem: subsystem, category: "Error")
     static let testing = OSLog(subsystem: subsystem, category: "Testing")
     static let command = OSLog(subsystem: subsystem, category: "Command")
+    static let playlist = OSLog(subsystem: subsystem, category: "Playlist")
 }
 
 @available(macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0, *)
@@ -65,6 +66,7 @@ public extension Logger {
     static let error = Logger(OSLog.error)
     static let testing = Logger(OSLog.testing)
     static let command = Logger(OSLog.command)
+    static let playlist = Logger(OSLog.playlist)
 }
 
 @available(macOS 10.15, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
