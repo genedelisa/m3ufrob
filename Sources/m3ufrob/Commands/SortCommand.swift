@@ -95,6 +95,11 @@ extension MainCommand {
         func run() async throws {
             print("verbose: \(commonOptions.verbose)  ")
             
+            guard #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) else {
+                print("\(Self.configuration.commandName ?? "command") isn't supported on this platform.")
+                return
+            }
+            
             if commonOptions.verbose {
                 let s = "input file name: \(inputFile ?? "no input file")".justify(.left)
                     .fg256(.aqua).bg256(.deepPink3)
@@ -132,7 +137,15 @@ extension MainCommand {
                     
                     if merge {
                         let merged = await playlist.mergeLoadedPlaylists(filePath: filename, playlists: playlists)
-                        //merged.displayPlaylist()
+                        
+                        print("There are \(merged.playlistEntries.count) entries.")
+                        print("View them? y/n")
+
+                        let y = Character("y").asciiValue!
+                        let ch = getch()
+                        if ch == y {
+                            merged.displayPlaylist()
+                        }
                     } else {
                         playlist.displayPlaylist()
                     }
@@ -150,7 +163,10 @@ extension MainCommand {
                 if let inputFile {
                     print("Processing file \(inputFile)".fg(.yellow))
                     
-                    let inputFileURL = URL(fileURLWithPath: inputFile)
+                    var inputFileURL = URL(fileURLWithPath: inputFile)
+                    inputFileURL.resolveSymlinksInPath()
+                    inputFileURL.standardize()
+
                     guard FileManager.default.fileExists(atPath: inputFileURL.path) else {
                         preconditionFailure("file expected at \(inputFileURL.path) is missing")
                     }

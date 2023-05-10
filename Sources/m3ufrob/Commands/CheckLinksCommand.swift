@@ -1,8 +1,6 @@
 //
-// File:         File.swift
+// File:         CheckLinksCommand.swift
 // Project:    
-// Package: 
-// Product:  
 //
 // Created by Gene De Lisa on 5/4/23
 //
@@ -40,9 +38,12 @@ extension MainCommand {
             version: version
         )
         
-        @Argument(help: ArgumentHelp(
-            NSLocalizedString("Input playlist file", comment: ""),
-            discussion: "The filename of the input playlist."))
+        @Argument(help:
+                    ArgumentHelp(
+                        NSLocalizedString("Input playlist file", comment: ""),
+                        discussion:
+                            "The filename of the input playlist.")
+        )
         var inputFile: String
         
         @OptionGroup() var commonOptions: Options
@@ -58,7 +59,8 @@ extension MainCommand {
             let inputFileURL = URL(fileURLWithPath: inputFile)
             
             if !FileManager.default.fileExists(atPath: inputFileURL.path) {
-                print("\(inputFile) does not exist".fg(.red))
+                //print("\(inputFile) does not exist".fg(.red))
+                stderr.write("\(inputFile) does not exist".fg(.red))
                 MainCommand.exit(withError: ExitCode.failure)
             }
             
@@ -95,19 +97,17 @@ extension MainCommand {
                     }
                     switch httpResponse.statusCode {
                     case 400:
-                        print("400 Bad Request \(url)".fg(.red))
+                        stderr.write("400 Bad Request \(url)".fg(.red))
                     case 403:
-                        print("403 Forbidden: \(url)".fg(.red))
+                        stderr.write("403 Forbidden: \(url)".fg(.red))
                     default: break
                     }
-                    // 400 and 403 are common too. 403 is forbidden, i.e. no permission
-                    // 400 is "bad request"
                     return httpResponse.statusCode == 200
                 } else {
                     return false
                 }
             } catch {
-                print("Error checking link: \(error.localizedDescription)".fg(.red))
+                stderr.write("Error checking link: \(error.localizedDescription)".fg(.red))
                 return false
             }
         }

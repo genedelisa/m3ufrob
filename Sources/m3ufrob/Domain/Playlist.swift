@@ -64,13 +64,26 @@ public class Playlist: Identifiable, ObservableObject {
         }
         
         for playlist in playlists {
-            if let contentsOfFile = try? String(contentsOfFile: playlist.fileURL.path, encoding: .utf8) {
-                let lines = contentsOfFile.components(separatedBy: .newlines)
+            
+            do {
+                var lines = [String]()
+                for try await line in playlist.fileURL.lines {
+                    lines.append(line)
+                }
                 playlist.playlistEntries = parse(lines)
                 playlist.removeDuplicates()
-            } else {
+            } catch {
                 Logger.playlist.error("Could not read contents of \(playlist.fileURL)")
             }
+
+            
+//            if let contentsOfFile = try? String(contentsOfFile: playlist.fileURL.path, encoding: .utf8) {
+//                let lines = contentsOfFile.components(separatedBy: .newlines)
+//                playlist.playlistEntries = parse(lines)
+//                playlist.removeDuplicates()
+//            } else {
+//                Logger.playlist.error("Could not read contents of \(playlist.fileURL)")
+//            }
         }
         return playlists
         
@@ -245,13 +258,28 @@ public class Playlist: Identifiable, ObservableObject {
         }
         
         do {
-            let contentsOfFile = try String(contentsOfFile: fileURL.path, encoding: .utf8)
-            let lines = contentsOfFile.components(separatedBy: .newlines)
+            var lines = [String]()
+            for try await line in fileURL.lines {
+                lines.append(line)
+            }
             self.playlistEntries = Playlist.parse(lines)
         } catch  {
             Logger.playlist.error("Could not read contents of \(self.fileURL, privacy: .public)")
             Logger.playlist.error("\(error.localizedDescription, privacy: .public)")
+
+            stderr.write("Could not read contents of \(self.fileURL)")
         }
+        
+//        do {
+//            let contentsOfFile = try String(contentsOfFile: fileURL.path, encoding: .utf8)
+//            let lines = contentsOfFile.components(separatedBy: .newlines)
+//            self.playlistEntries = Playlist.parse(lines)
+//        } catch  {
+//            Logger.playlist.error("Could not read contents of \(self.fileURL, privacy: .public)")
+//            Logger.playlist.error("\(error.localizedDescription, privacy: .public)")
+//
+//            stderr.write("Could not read contents of \(self.fileURL)")
+//        }
         
 //        if let contentsOfFile = try? String(contentsOfFile: fileURL.path, encoding: .utf8) {
 //            let lines = contentsOfFile.components(separatedBy: .newlines)
@@ -420,10 +448,10 @@ public class Playlist: Identifiable, ObservableObject {
             s += "# Unique Count: \(self.sortedEntries.count)\n\n"
             for f in sortedEntries {
                 s += "\(f.originalExtinf)"
-                    .fg256(infFg).bg256(infBg)
+                    //.fg256(infFg).bg256(infBg)
                 s += "\n"
                 s += "\(f.urlString)"
-                    .fg256(urlFg).bg256(urlBg)
+                    //.fg256(urlFg).bg256(urlBg)
                 s += "\n\n"
             }
             

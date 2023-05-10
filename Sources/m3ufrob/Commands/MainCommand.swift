@@ -1,5 +1,5 @@
 //
-// File:         Sources
+// File:         MainCommand.swift
 // Project:    m3ufrob
 // Package: m3ufrob
 // Product:  
@@ -21,171 +21,182 @@
 //
 // https://opensource.org/licenses/MIT
 
-
 import ArgumentParser
 import Foundation
 import os.log
 import OSLog
+import GDTerminalColor
 
 @available(macOS 10.15, *)
 @main
 struct MainCommand: AsyncParsableCommand {
     static let version = "0.1.0"
-
+    
     static var configuration = CommandConfiguration(
-      commandName: "m3ufrob",
-      abstract: "Create a thing",
-      usage: """
+        commandName: "m3ufrob",
+        abstract: """
+A few common frobs for playlists are available.
+You can sort a playlist and remove duplicate entries.
+You can check the links in the playlist and indicates which are dead.
+""",
+        usage: """
         xcrun swift run m3ufrob  -h
         xcrun swift run m3ufrob --prolix-help
-
+        
+        xcrun swift run m3ufrob sort inputfile
+        xcrun swift run m3ufrob sort inputfile -o outputfile
+        
         """,
-      version: version,
-      subcommands: [
-        SortCommand.self,
-        CheckLinksCommand.self,
-        TimerPublishCommand.self,
-        WindowCommand.self],
-      defaultSubcommand: SortCommand.self
+        version: version,
+        subcommands: [
+            SortCommand.self,
+            CheckLinksCommand.self,
+            TimerPublishCommand.self,
+            WindowCommand.self]
+        
+        // the run() right here will never be executed if you specify this
+        //        defaultSubcommand: SortCommand.self
     )
-
+    
     struct Options: ParsableArguments {
+        
         @Flag(name: .shortAndLong,
-              help: ArgumentHelp(String(localized: "Yakity yak.", comment: "")))
+              help: ArgumentHelp(
+                String(localized: "Yakity yak.", comment: ""),
+                discussion:
+                    String(localized: "Print a lot of debugging information", comment: "")
+              )
+        )
         var verbose = false
     }
+    
+    
     @OptionGroup() var commonOptions: Options
-
+    
     @Flag(
-      help: ArgumentHelp(NSLocalizedString("Display the current version.", comment: ""),
-                         discussion: "This will display the current version then exit")
+        help: ArgumentHelp(
+            String(localized: "Display the current version.", comment: ""),
+            discussion:
+                String(localized: "This will display the current version then exit", comment: "")
+        )
     )
     var version = false
-
+    
     @Flag(
-      help: ArgumentHelp(NSLocalizedString("Display the help document.", comment: ""),
-                         discussion: "This will print the help file to stdout")
+        help: ArgumentHelp(
+            String(localized: "Display the help document.", comment: ""),
+            discussion:
+                String(localized: "This will print the help file to stdout", comment: "")
+        )
     )
     var prolixHelp = false
-
+    
     @Flag(
-      help: ArgumentHelp(NSLocalizedString("Display the JSON response.", comment: ""),
-                         discussion: "This will print the JSON returned from the server")
+        help: ArgumentHelp(
+            String(localized: "Display the log entries for debugging.", comment: ""),
+            discussion:
+                String(localized: "Display the log entries for debugging.", comment: "")
+        )
     )
-    var displayJSON = false
-
-    @Flag(help: ArgumentHelp(NSLocalizedString("Display the log entries for debugging.", comment: ""),
-                             discussion: "Display the log entries for debugging.")
-    )
+    
     var showLogging = false
-
-
+    
     @Flag(name: [.long],
-          help: ArgumentHelp(NSLocalizedString("reset all stored preferences", comment: ""),
-                             discussion: "Remove all default values."))
+          help: ArgumentHelp(
+            String(localized: "reset all stored preferences", comment: ""),
+            discussion:
+                String(localized: "Remove all default values.", comment: "")
+          )
+    )
     var resetDefaults = false
-
-
+    
+    //MAKR: functions
+    
     mutating func validate() throws {
-
-//        guard !inputDirectoryName.isEmpty else {
-//            throw ValidationError("You need to set the input directory.")
-//        }
-
-        //        guard fetchLimit >= 1 else {
-        //            throw ValidationError("Please specify a 'fetchLimit' of at least 1.")
-        //        }
     }
-
+    
     func showHelp() {
+        
         if let helpURL = Bundle.module.url(forResource: "help",
                                            withExtension: "txt") {
-            do {
-                let data = try Data(contentsOf: helpURL)
-                if let s = String(data: data, encoding: .utf8) {
-                    print(s)
+            
+            Task {
+                do {
+                    ColorConsole.enablePrintColors()
+                    for try await line in helpURL.lines {
+                        print(line)
+                    }
+                    ColorConsole.disablePrintColors()
+                    
+                } catch  {
+                    Logger.playlist.error("Could not read contents of \(helpURL, privacy: .public)")
+                    Logger.playlist.error("\(error.localizedDescription, privacy: .public)")
+                    stderr.write("Could not read contents of \(helpURL)")
                 }
-            } catch {
-                print(error.localizedDescription)
             }
+            
+            //            do {
+            //                let data = try Data(contentsOf: helpURL)
+            //                if let s = String(data: data, encoding: .utf8) {
+            //                    print(s)
+            //                }
+            //            } catch {
+            //                print(error.localizedDescription)
+            //            }
+            
         } else {
-            print("The help file was not found.")
+            stderr.write("The help file was not found.")
         }
     }
-
+    
     func checkAndSetDefaults() {
-
+        
         if resetDefaults {
             Preferences.resetDefaults()
             Preferences.sharedInstance.resetAll()
             MainCommand.exit(withError: ExitCode.success)
         }
-
+        
     }
-
-
+    
     func run() async throws {
-
+        
         guard #available(macOS 12, *) else {
-            print("'m3ufrob' isn't supported on this platform.")
+            print("\(Self.configuration.commandName ?? "command") isn't supported on this platform.")
             return
         }
-
+        
         if Preferences.sharedInstance.isFirstRun() {
             Logger.command.debug("first run")
         }
-
+        
         if version {
             print("version: \(Self.version)")
             MainCommand.exit(withError: ExitCode.success)
         }
-
+        
         checkAndSetDefaults()
-
-
+        
+        
         if prolixHelp {
             showHelp()
-
             MainCommand.exit(withError: ExitCode.success)
         }
-
-
-        //                if verbose {
-        //                    Logger.command.info("Fetching user with id \(id, privacy: .public)")
-        //                    print("🔭 Fetching user with id \(id)")
-        //                }
-
-        let dateFormatter: DateFormatter = {
-            let dateFormat = DateFormatter()
-            dateFormat.dateStyle = .medium
-            dateFormat.timeStyle = .medium
-            dateFormat.timeZone = TimeZone.current
-            return dateFormat
-        }()
-        let ts = dateFormatter.string(from: Date())
-        print("date \(ts)")
-
-        // let inputDirectoryURL = URL(fileURLWithPath: self.inputDirectoryName)
-        // if commonOptions.verbose {
-        //     Logger.command.info("input directory \(inputDirectoryURL.absoluteString, privacy: .public)")
-        //     print("input directory \(inputDirectoryURL.absoluteString)")
-        // }
-
-
+        
         if showLogging {
-
+            
             let entries: [OSLogEntryLog] = Logger.findEntries(subsystem: OSLog.subsystem)
             let estrings =
-              entries.map {
-                  (entry: OSLogEntryLog) -> String in
-                  "\(entry)"
-              }
-
+            entries.map {
+                (entry: OSLogEntryLog) -> String in
+                "\(entry)"
+            }
+            
             for entry in estrings {
                 print("\(entry)")
             }
         }
-
+        
     }
-
+    
 }

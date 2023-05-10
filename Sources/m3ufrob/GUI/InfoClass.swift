@@ -24,37 +24,74 @@
 
 import os.log
 import OSLog
-
+import Combine
 
 class InfoClass {
     static let version = "0.1.0"
-    var date = Date()
+    
+    //    @Published var url: URL?
+    
+//    @Published var url: URL = URL(fileURLWithPath: ".")
+    var url: URL?
+    
     var voiceName = "Serena"
-
+    
     init(voiceName: String) {
         self.voiceName = voiceName
     }
-
-
+    
     func header() -> String {
-        return "Here's the header"
+        return "Directory"
     }
-
+    
     func info() -> String {
-        return "Here's some info\n\(date))"
+        return "\(url?.lastPathComponent ?? "not set"))"
+        
+        //        if let url {
+        //            return "\(url.lastPathComponent))"
+        //        } else {
+        //            return ""
+        //        }
     }
-
+    
     func calculateInfo() {
-        date = Date()
+        
     }
-
+    
+    func show(merge: Bool, filename: String ) async {
+        
+        if let url {
+            let playlists = await Playlist.readPlaylistDirectory(url)
+            for playlist in playlists {
+                print("Playlist: \(playlist.fileURL.absoluteString)")
+                print("Entry count: \(playlist.playlistEntries.count)")
+                playlist.removeDuplicates()
+                
+                if merge {
+                    let merged = await playlist.mergeLoadedPlaylists(filePath: filename, playlists: playlists)
+                    
+                    print("There are \(merged.playlistEntries.count) entries.")
+                    print("View them? y/n")
+                    
+                    let y = Character("y").asciiValue!
+                    let ch = getch()
+                    if ch == y {
+                        merged.displayPlaylist()
+                    }
+                } else {
+                    playlist.displayPlaylist()
+                }
+            }
+        }
+    }
+    
     func say(blather: String) {
         let path = "/usr/bin/say"
         let arguments = ["-v", voiceName, blather]
         let task = Process.launchedProcess(launchPath: path, arguments: arguments)
         task.waitUntilExit()
     }
-
+    
     func bash(_ command: String) -> String? {
         let task = Process()
         task.launchPath = "/bin/bash"

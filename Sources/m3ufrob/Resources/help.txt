@@ -1,18 +1,14 @@
-hncli: Hacker News Command Line Interface.
+m3ufrob: Frobs for m3u8 playlists
 
-Clever name, huh?
 
-The HN API is a bit unusual. There are only GET requests and there is no way to retrieve many items are once.
-So, there will be as many requests sent up to the fetch-limit variable.
+$ xcrun swift run m3ufrob -h
 
-$ xcrun swift run hncli
+Will display the default flags and a few blurbs about the commmands
 
-will run with the default values. Five new items will be retrieved.
+$ xcrun swift run m3ufrob sort filename
 
-$ xcrun swift run hncli --top
+Will sort and "uniqueify" the specified playlist
 
-Specifies that you want the top items and not the new items.
+$ xcrun swift run m3ufrob check filename
 
-$ xcrun swift run hncli --top --fetch-limit 10
-
-Specifies that you want 10 top items.
+Will check each url in the playlist file for dead links
