@@ -1,0 +1,14 @@
+m3ufrob: Frobs for m3u8 playlists
+
+
+$ xcrun swift run m3ufrob -h
+
+Will display the default flags and a few blurbs about the commmands
+
+$ xcrun swift run m3ufrob sort filename
+
+Will sort and "uniqueify" the specified playlist
+
+$ xcrun swift run m3ufrob check filename
+
+Will check each url in the playlist file for dead links

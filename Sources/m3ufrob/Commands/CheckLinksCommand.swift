@@ -28,21 +28,28 @@ extension MainCommand {
     
     struct CheckLinksCommand:  AsyncParsableCommand {
         static let version = "0.1.0"
-
+        
         static var configuration = CommandConfiguration(
             commandName: "check",
-            abstract: "This reads a playlist, then checks for dead links.",
-            usage: """
+            abstract: String(localized: """
+                This reads a playlist, then checks for dead links.
+            """,
+                             comment: "Help abstract"),
+            usage: String(localized: """
               xcrun swift run m3ufrob check filename
-              """,
+            """,
+                          comment: "Help Usage"),
             version: version
         )
         
         @Argument(help:
                     ArgumentHelp(
-                        NSLocalizedString("Input playlist file", comment: ""),
+                        String(localized: "Input playlist file.",
+                               comment: "help for arg"),
                         discussion:
-                            "The filename of the input playlist.")
+                            String(localized: "The filename of the input playlist.",
+                                   comment: "help discussion for arg")
+                    )
         )
         var inputFile: String
         

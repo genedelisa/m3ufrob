@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "m3ufrob",
+    defaultLocalization: "en",
     platforms: [
         // big surly is 11.4
         // Ventura 13.2.1
@@ -18,8 +19,12 @@ let package = Package(
     ],
 
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.2"),
-        .package(url: "https://github.com/genedelisa/GDTerminalColor.git", from: "0.1.43")
+        .package(url: "https://github.com/apple/swift-argument-parser.git",
+                 from: "1.1.0"),
+//                 from: "1.2.2"),
+        .package(url: "https://github.com/genedelisa/GDTerminalColor.git", from: "0.1.43"),
+        .package(url: "https://github.com/apple/swift-format", from: "508.0.0")
+
         // local
         //.package(name: "GDTerminalColor",
         //                path: "../../../../Packages/GDTerminalColor")
@@ -37,7 +42,8 @@ let package = Package(
                 "Resources/short.m3u"
             ],
             resources: [
-                .process("Resources/help.txt")
+                .process("Resources")
+//                .process("Resources/help.txt")
             ],
             
 

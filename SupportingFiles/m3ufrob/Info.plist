@@ -20,5 +20,9 @@
 	<string>m3ufrob</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.rockhoppertech.m3ufrob</string>
+	<key>CFBundleAllowMixedLocalizations</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
 </dict>
 </plist>

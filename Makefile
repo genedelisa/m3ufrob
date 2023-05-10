@@ -91,9 +91,26 @@ lintfix:					## fix the problems discovered by swiftlint
 	swiftlint --fix --format
 #	swiftlint --fix --format --quiet
 
+.PHONY: slint
+slint:						## lint your sources
+	swiftlint lint --quiet --strict
+
 .PHONY: lint
 lint:						## lint your sources
-	swiftlint lint --quiet --strict
+	xcrun swift run swift-format lint --configuration .swift-format.json --recursive --color-diagnostics ./Sources
+
+
+# e.g. make lintfile FILES=./Sources/m3ufrob/Utility/Logger+.swift
+.PHONY: lintfile
+lintfile:						## lint the specified file(s)
+	xcrun swift run swift-format lint --configuration .swift-format.json --color-diagnostics $(FILES)
+
+# e.g. make formatfile FILES=./Sources/m3ufrob/Utility/Logger+.swift
+.PHONY: formatfile
+formatfile:						## format the specified file(s)
+	xcrun swift run swift-format format --configuration .swift-format.json --color-diagnostics $(FILES)
+# --in-place
+
 
 .PHONY: dockertest
 dockertest:					## run the test target in docker
@@ -108,10 +125,6 @@ runexe: 					## directly run the program
 .PHONY: run
 run: $(PROG)					## swift run the program. e.g. make run ARGS=--verbose file
 	$(SWIFT) run -- $(PROG) $(ARGS)
-
-.PHONY: runexe
-runexe: 					## directly run the program
-	.build/debug/$(PROG) -h
 
 
 # The Swift Package Index recommends that before submitting your package that this emits valid JSON.
@@ -153,6 +166,15 @@ debug: build-debug				## build the debug version
 .PHONY: clean
 clean:						## clean package
 	$(SWIFT) package clean
+	
+.PHONY: exportLocalizations
+exportLocalizations:						## export to folder LocalizationExport
+	xcodebuild -exportLocalizations -localizationPath LocalizationExport -exportLanguage en -exportLanguage it | xcbeautify
+	
+.PHONY: importLocalizations
+importLocalizations:						## import Italian from folder LocalizationExport
+	xcodebuild -importLocalizations -localizationPath LocalizationExport/it.xcloc  -mergeImport | xcbeautify
+
 
 .PHONY: docs
 docs:						## Generate docs via docc

@@ -1,0 +1,81 @@
+/* Help abstract */
+"    This reads a playlist, then checks for dead links." = "    This reads a playlist, then checks for dead links.";
+
+/* Help Usage */
+"  xcrun swift run m3ufrob check filename" = "  xcrun swift run m3ufrob check filename";
+
+/* file name. not to be translated */
+"%@" = "%@";
+
+/* Prompt to choose a folder */
+"Choose" = "Scegliere";
+
+/* No comment provided by engineer. */
+"Could not find the help file" = "Impossibile trovare il file della guida";
+
+/* Header label for directory in DirView */
+"Directory" = "Directory";
+
+/* No comment provided by engineer. */
+"Display the current version." = "Visualizza la versione corrente.";
+
+/* No comment provided by engineer. */
+"Display the help document." = "Display the help document.";
+
+/* No comment provided by engineer. */
+"Display the log entries for debugging." = "Display the log entries for debugging.";
+
+/* No comment provided by engineer. */
+"Does the help file exist? Is it in the Resources folder?" = "Does the help file exist? Is it in the Resources folder?";
+
+/* No comment provided by engineer. */
+"Frob all playlists in this directory.." = "Frob all playlists in this directory..";
+
+/* No comment provided by engineer. */
+"Input Directory." = "Elenco di input.";
+
+/* help for arg */
+"Input playlist file." = "Input playlist file.";
+
+/* No comment provided by engineer. */
+"Interval" = "Interval";
+
+/* No comment provided by engineer. */
+"Output file name." = "Nome del file di output.";
+
+/* No comment provided by engineer. */
+"Print a lot of debugging information" = "Print a lot of debugging information";
+
+/* No comment provided by engineer. */
+"Remove all default values." = "Remove all default values.";
+
+/* No comment provided by engineer. */
+"reset all stored preferences" = "reset all stored preferences";
+
+/* help discussion for arg */
+"The filename of the input playlist." = "The filename of the input playlist.";
+
+/* No comment provided by engineer. */
+"The filename of the processed playlist." = "The filename of the processed playlist.";
+
+/* No comment provided by engineer. */
+"The help file could not be read." = "The help file could not be read.";
+
+/* No comment provided by engineer. */
+"This reads a playlist(s), then removes duplicates and sorts it." = "This reads a playlist(s), then removes duplicates and sorts it.";
+
+/* No comment provided by engineer. */
+"This will display the current version then exit" = "This will display the current version then exit";
+
+/* No comment provided by engineer. */
+"This will print the help file to stdout" = "This will print the help file to stdout";
+
+/* No comment provided by engineer. */
+"Voice." = "Voice.";
+
+/* No comment provided by engineer. */
+"Yakity yak." = "Yakity yak.";
+
+/* Subheadline in Dirview */
+"Your playlists" = "Your playlists";
+

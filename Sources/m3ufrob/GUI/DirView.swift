@@ -47,14 +47,14 @@ struct DirView: View {
             
             Spacer()
             
-            Text("Directory")
+            Text("Directory", comment: "Header label for directory in DirView")
                 .font(.headline)
             
-            Text("Your playlists")
+            Text("Your playlists", comment: "Subheadline in Dirview")
                 .font(.subheadline)
             
             if let u = self.url {
-                Text("\(u.absoluteString)")
+                Text("\(u.absoluteString)", comment: "file name. not to be translated")
                     .font(.title)
             }
             
@@ -63,7 +63,8 @@ struct DirView: View {
             Button {
                 showChooseFileDialog(title: "Choose Directory")
             } label: {
-                Label("Choose", systemImage: "folder")
+                Label(String(localized: "Choose", comment:"Prompt to choose a folder"),
+                      systemImage: "folder")
             }
             .padding()
             

@@ -328,7 +328,7 @@ public class Playlist: Identifiable, ObservableObject {
     // really simple minded. Just the extinf with dur and title and the url on the next line.
     internal static func parse(_ lines: [String]) -> [PlaylistEntry] {
         Logger.playlist.trace("\(#function)")
-        print("\(#function)")
+        //print("\(#function)")
         
         enum ParseState {
             case empty, hasExtInf, hasURL

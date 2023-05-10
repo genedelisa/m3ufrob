@@ -24,3 +24,7 @@ Here's the [Apple docs directory][apple-docs] .
 
 
 [apple-docs]:<https://developer.apple.com/documentation/technologies> "Apple documentation"
+
+## Localization
+
+https://stackoverflow.com/questions/63237395/generating-resource-bundle-accessor-type-bundle-has-no-member-module/66630000#66630000
