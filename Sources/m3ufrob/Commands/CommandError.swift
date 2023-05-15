@@ -22,7 +22,6 @@
 // https://opensource.org/licenses/MIT
 
 
-
 import Foundation
 import os.log
 
@@ -31,27 +30,38 @@ enum CommandError: Swift.Error {
 }
 
 extension CommandError: LocalizedError {
+    
     public var errorDescription: String? {
         switch self {
         case .helpFileNotFound:
-            return NSLocalizedString("Could not find the help file",
-                                     comment: "")
+            return localizedString(
+                "Could not find the help file",
+                comment: "Error message")
+            //            return String(localized:"Could not find the help file",
+            //                          comment: "Error message")
         }
     }
-
+    
     public var failureReason: String? {
         switch self {
         case .helpFileNotFound:
-            return NSLocalizedString("The help file could not be read.",
-                                     comment: "")
+            return localizedString(
+                "The help file could not be read.",
+                comment: "Error message")
+            //            return String(localized:"The help file could not be read.",
+            //                          comment: "Error message")
         }
     }
-
+    
     public var recoverySuggestion: String? {
         switch self {
         case .helpFileNotFound:
-            return NSLocalizedString("Does the help file exist? Is it in the Resources folder?",
-                                     comment: "")
+            return localizedString(
+                "Does the help file exist? Is it in the Resources folder?",
+                comment: "Error message")
+            
+            //            return String(localized:"Does the help file exist? Is it in the Resources folder?",
+            //                          comment: "Error message")
         }
     }
 }
@@ -61,3 +71,4 @@ extension CommandError: Equatable {
         lhs.localizedDescription == rhs.localizedDescription
     }
 }
+

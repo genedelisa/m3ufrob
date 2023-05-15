@@ -108,8 +108,13 @@ lintfile:						## lint the specified file(s)
 # e.g. make formatfile FILES=./Sources/m3ufrob/Utility/Logger+.swift
 .PHONY: formatfile
 formatfile:						## format the specified file(s)
-	xcrun swift run swift-format format --configuration .swift-format.json --color-diagnostics $(FILES)
-# --in-place
+	xcrun swift run swift-format format --configuration .swift-format.json --color-diagnostics --in-place $(FILES)
+
+.PHONY: format
+format:						## format the specified file(s)
+	xcrun swift run swift-format format --configuration .swift-format.json --color-diagnostics --recursive --in-place ./Sources
+
+
 
 
 .PHONY: dockertest

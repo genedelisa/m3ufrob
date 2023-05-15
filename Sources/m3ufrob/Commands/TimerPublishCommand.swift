@@ -41,8 +41,14 @@ extension MainCommand {
         @OptionGroup() var commonOptions: Options
 
         @Option(name: [.customShort("i"), .long],
-                help: ArgumentHelp(NSLocalizedString("Interval", comment: ""),
-                                   discussion: "Set the publish interval"))
+                help: ArgumentHelp(
+                    String(localized:"Interval",
+                           comment: "polling interval for poll command"),
+                    discussion:
+                        String(localized:"Set the publish interval",
+                               comment: "arg for poll command")
+                )
+        )
         var interval: Double = 1.0
 
         func validate() throws {

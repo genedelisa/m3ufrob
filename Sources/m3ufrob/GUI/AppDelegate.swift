@@ -64,7 +64,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
 
         // Window setup
-        let size = CGSize(width: 480, height: 270)
+        let size = CGSize(width: 480, height: 370)
         window.setContentSize(size)
         window.styleMask = [.closable, .miniaturizable, .resizable, .titled, .fullSizeContentView]
         window.delegate = windowDelegate

@@ -2,7 +2,7 @@
 // File:         Sources
 // Project:    m3ufrob
 // Package: m3ufrob
-// Product:  
+// Product:
 //
 // Created by Gene De Lisa on 5/4/23
 //
@@ -21,15 +21,14 @@
 //
 // https://opensource.org/licenses/MIT
 
-
 import Foundation
-import os.log
 import OSLog
+import os.log
 
 @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-public extension OSLog {
+extension OSLog {
 
-    static var subsystem: String = {
+    public static var subsystem: String = {
         if let s = Bundle.main.bundleIdentifier {
             return s
         }
@@ -39,39 +38,41 @@ public extension OSLog {
         return "com.rockhoppertech.createm3u8"
     }()
 
-    static let general = OSLog(subsystem: subsystem, category: "General")
-    static let domain = OSLog(subsystem: subsystem, category: "Domain")
-    static let model = OSLog(subsystem: subsystem, category: "Model")
-    static let service = OSLog(subsystem: subsystem, category: "Service")
-    static let api = OSLog(subsystem: subsystem, category: "API")
-    static let persistence = OSLog(subsystem: subsystem, category: "Persistence")
-    static let parsing = OSLog(subsystem: subsystem, category: "Parsing")
-    static let ui = OSLog(subsystem: subsystem, category: "UI")
-    static let error = OSLog(subsystem: subsystem, category: "Error")
-    static let testing = OSLog(subsystem: subsystem, category: "Testing")
-    static let command = OSLog(subsystem: subsystem, category: "Command")
-    static let playlist = OSLog(subsystem: subsystem, category: "Playlist")
+    public static let general = OSLog(subsystem: subsystem, category: "General")
+    public static let domain = OSLog(subsystem: subsystem, category: "Domain")
+    public static let model = OSLog(subsystem: subsystem, category: "Model")
+    public static let service = OSLog(subsystem: subsystem, category: "Service")
+    public static let api = OSLog(subsystem: subsystem, category: "API")
+    public static let persistence = OSLog(subsystem: subsystem, category: "Persistence")
+    public static let parsing = OSLog(subsystem: subsystem, category: "Parsing")
+    public static let ui = OSLog(subsystem: subsystem, category: "UI")
+    public static let error = OSLog(subsystem: subsystem, category: "Error")
+    public static let testing = OSLog(subsystem: subsystem, category: "Testing")
+    public static let command = OSLog(subsystem: subsystem, category: "Command")
+    public static let playlist = OSLog(subsystem: subsystem, category: "Playlist")
 }
 
 @available(macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0, *)
-public extension Logger {
-    static let general = Logger(OSLog.general)
-    static let domain = Logger(OSLog.domain)
-    static let model = Logger(OSLog.model)
-    static let service = Logger(OSLog.service)
-    static let api = Logger(OSLog.api)
-    static let persistence = Logger(OSLog.persistence)
-    static let parsing = Logger(OSLog.parsing)
-    static let ui = Logger(OSLog.ui)
-    static let error = Logger(OSLog.error)
-    static let testing = Logger(OSLog.testing)
-    static let command = Logger(OSLog.command)
-    static let playlist = Logger(OSLog.playlist)
+extension Logger {
+    public static let general = Logger(OSLog.general)
+    public static let domain = Logger(OSLog.domain)
+    public static let model = Logger(OSLog.model)
+    public static let service = Logger(OSLog.service)
+    public static let api = Logger(OSLog.api)
+    public static let persistence = Logger(OSLog.persistence)
+    public static let parsing = Logger(OSLog.parsing)
+    public static let ui = Logger(OSLog.ui)
+    public static let error = Logger(OSLog.error)
+    public static let testing = Logger(OSLog.testing)
+    public static let command = Logger(OSLog.command)
+    public static let playlist = Logger(OSLog.playlist)
 }
 
 @available(macOS 10.15, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 extension Logger {
-    static func exportEntries(subsystem: String, category: String? = nil, date: Date? = nil) -> [String] {
+    static func exportEntries(subsystem: String, category: String? = nil, date: Date? = nil)
+        -> [String]
+    {
         var entries: [String] = []
 
         do {
@@ -93,13 +94,15 @@ extension Logger {
             if let category = category {
                 let subsystemPredicate = NSPredicate(format: "(subsystem == %@)", subsystem)
                 let categoryPredicate = NSPredicate(format: "(category == %@)", category)
-                predicate = NSCompoundPredicate(andPredicateWithSubpredicates:
-                    [subsystemPredicate, categoryPredicate])
+                predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                    subsystemPredicate, categoryPredicate,
+                ])
             } else {
                 predicate = NSPredicate(format: "(subsystem == %@)", subsystem)
             }
 
-            entries = try store
+            entries =
+                try store
                 .getEntries(at: position, matching: predicate)
                 .compactMap { $0 as? OSLogEntryLog }
                 .map { "[\($0.date.formatted())] [\($0.category)] \($0.composedMessage)" }
@@ -110,7 +113,9 @@ extension Logger {
         return entries
     }
 
-    static func findEntries(subsystem: String, category: String? = nil, date: Date? = nil) -> [OSLogEntryLog] {
+    static func findEntries(subsystem: String, category: String? = nil, date: Date? = nil)
+        -> [OSLogEntryLog]
+    {
         var entries: [OSLogEntryLog] = []
 
         do {
@@ -132,15 +137,17 @@ extension Logger {
             if let category = category {
                 let subsystemPredicate = NSPredicate(format: "(subsystem == %@)", subsystem)
                 let categoryPredicate = NSPredicate(format: "(category == %@)", category)
-                predicate = NSCompoundPredicate(andPredicateWithSubpredicates:
-                    [subsystemPredicate, categoryPredicate])
+                predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                    subsystemPredicate, categoryPredicate,
+                ])
             } else {
                 predicate = NSPredicate(format: "(subsystem == %@)", subsystem)
             }
 
             // getEntries returns a colleciton of OSLogEntry.
             // So compactMap will downcast to OSLogEntryLog is it really is an OSLogEntryLog.
-            entries = try store
+            entries =
+                try store
                 .getEntries(at: position, matching: predicate)
                 .compactMap { $0 as? OSLogEntryLog }
         } catch {
@@ -172,13 +179,13 @@ extension DefaultStringInterpolation {
         }
 
         let isoDateFormatter = ISO8601DateFormatter()
-//        isoDateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        //        isoDateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         isoDateFormatter.timeZone = TimeZone.current
         isoDateFormatter.formatOptions = [
             .withFullDate,
             .withFullTime,
             .withDashSeparatorInDate,
-            .withFractionalSeconds
+            .withFractionalSeconds,
         ]
 
         let isoDate = isoDateFormatter.string(from: entry.date)
@@ -189,17 +196,18 @@ extension DefaultStringInterpolation {
 
         // let category = entry.category.padding(toLength: 13, withPad: " ", startingAt: 0)
 
-        let subsyscat = "\(entry.subsystem):\(entry.category)".padding(toLength: 42, withPad: " ", startingAt: 0)
+        let subsyscat = "\(entry.subsystem):\(entry.category)".padding(
+            toLength: 42, withPad: " ", startingAt: 0)
 
         var s = ""
-//        s += "[\(entry.date.formatted())] "
-//        s += "[\(entry.date.ISO8601Format())]) "
+        //        s += "[\(entry.date.formatted())] "
+        //        s += "[\(entry.date.ISO8601Format())]) "
         s += "[\(isoDate)] "
         // log type?
         s += "\(entry.process)[\(entry.processIdentifier):\(entry.threadIdentifier)] "
-        s += "[\(levelString)] " // not in compact
-//        s += "[\(entry.subsystem)] "
-//        s += "[\(category)] "
+        s += "[\(levelString)] "  // not in compact
+        //        s += "[\(entry.subsystem)] "
+        //        s += "[\(category)] "
         s += "[\(subsyscat)] "
         s += "\(entry.composedMessage) "
         appendInterpolation(s)

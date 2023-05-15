@@ -64,6 +64,7 @@ public class Playlist: Identifiable, ObservableObject {
         }
         
         for playlist in playlists {
+            print("doing \(playlist.id)")
             
             do {
                 var lines = [String]()
@@ -98,7 +99,8 @@ public class Playlist: Identifiable, ObservableObject {
         //        }
     }
     
-    static func playlistsInDirectory(_ url: URL) async -> [FileEntry] {
+    @MainActor
+    static func playlistsInDirectory(_ url: URL)  -> [FileEntry] {
         Logger.playlist.trace("\(#function)")
         
         let keys: [URLResourceKey] = [
@@ -132,6 +134,7 @@ public class Playlist: Identifiable, ObservableObject {
         return []
     }
     
+    @MainActor
     func mergeLoadedPlaylists(filePath: String, playlists: [Playlist] ) async -> Playlist {
         Logger.playlist.trace("\(#function)")
         
@@ -246,6 +249,7 @@ public class Playlist: Identifiable, ObservableObject {
         return s
     }
     
+    @MainActor
     func load() async {
         Logger.playlist.trace("\(#function)")
         
@@ -260,7 +264,7 @@ public class Playlist: Identifiable, ObservableObject {
         do {
             var lines = [String]()
             for try await line in fileURL.lines {
-                lines.append(line)
+                lines.append(line.trimmingCharacters(in: .whitespaces))
             }
             self.playlistEntries = Playlist.parse(lines)
         } catch  {
@@ -437,7 +441,7 @@ public class Playlist: Identifiable, ObservableObject {
                 //                try s.write(toFile: outputURL.absoluteString, atomically: true, encoding: .utf8)
                 
             } catch {
-                print("\(error.localizedDescription)")
+                print("\(error.localizedDescription)".fg(.red))
             }
             
         } else {
@@ -504,3 +508,16 @@ extension Playlist: CustomStringConvertible {
         return s
     }
 }
+
+extension Playlist: Hashable {
+    public static func == (lhs: Playlist, rhs: Playlist) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self.fileURL)
+        hasher.combine(self.description)
+    }
+}
+
+

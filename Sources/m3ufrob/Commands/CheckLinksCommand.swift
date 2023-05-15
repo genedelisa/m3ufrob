@@ -32,7 +32,7 @@ extension MainCommand {
         static var configuration = CommandConfiguration(
             commandName: "check",
             abstract: String(localized: """
-                This reads a playlist, then checks for dead links.
+            This reads a playlist, then checks for dead links.
             """,
                              comment: "Help abstract"),
             usage: String(localized: """

@@ -122,6 +122,42 @@ You can check the links in the playlist and indicates which are dead.
             
             Task {
                 do {
+                    print("Current Locale code: \(Locale.current.identifier)")
+                    if let language = Locale.current.language.languageCode {
+                        let languageCode = language.identifier
+                        print("Language code: \(languageCode)")
+                    }
+                    if let code = Bundle.main.preferredLocalizations.first?.components(separatedBy: "-").first {
+                        print("bundle code: \(code)")
+                               // Locale.current.languageCode ?? "en"
+                    }
+                    let languagePrefix = Locale.preferredLanguages[0]
+                    print(languagePrefix)
+                    let langCode = Bundle.main.preferredLocalizations[0]
+                    print("Bundle.main.preferredLocalizations: \(langCode)")
+
+                    for pl in Bundle.main.preferredLocalizations {
+                        print("preferred \(pl)")
+                    }
+                    for loc in Bundle.main.localizations {
+                        print("localizations \(loc)")
+                    }
+                    
+                    if let s = ProcessInfo().environment["LC_ALL"] {
+                        print("LC_ALL \(s)")
+                        if s.starts(with: "it") {
+                            let itloc = Locale(identifier: "it_IT.ISO8859-15")
+                            print("setting italian \(itloc)")
+                            UserDefaults.standard.set(["it_IT.ISO8859-15"], forKey: "AppleLanguages")
+                            UserDefaults.standard.synchronize()
+
+                        }
+                    }
+                    if let s = ProcessInfo().environment["LANG"] {
+                        print("LANG \(s)")
+                    }
+
+                    
                     ColorConsole.enablePrintColors()
                     for try await line in helpURL.lines {
                         print(line)

@@ -83,6 +83,13 @@ extension MainCommand {
                 return
             }
             
+            UserDefaults.standard.set(["it", "en"], forKey: "AppleLanguages")
+            UserDefaults.standard.synchronize()
+            let s = String(localized: "Choose", comment: "")
+            print(s)
+
+
+            
             let info = InfoClass(voiceName: voice)
             
 //            let sub = info.$url

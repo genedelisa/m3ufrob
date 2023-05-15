@@ -66,6 +66,20 @@ extension MainCommand {
         @Option(
             name: [.long],
             help: ArgumentHelp(
+                String(localized: "Output directory.",
+                       comment: ""),
+                discussion:
+                    String(localized: "The directory for the processed playlists.",
+                           comment: "")
+            ),
+            transform: URL.init(fileURLWithPath:)
+        )
+        var outputDir: URL?
+        
+        
+        @Option(
+            name: [.long],
+            help: ArgumentHelp(
                 String(localized: "Input Directory.", comment: ""),
                 discussion:
                     String(localized: "Frob all playlists in this directory..", comment: "")
@@ -77,9 +91,27 @@ extension MainCommand {
             name: [.long],
             inversion: .prefixedNo,
             exclusivity: .exclusive,
-            help: "Merge the playlists read from a directory"
+            help:
+                ArgumentHelp(
+                    String(localized: "Merge", comment: ""),
+                    discussion:
+                        String(localized: "Merge the playlists read from a directory..", comment: "")
+                )
         )
         public var merge: Bool = true
+        
+        @Flag(
+            //name: [.short],
+            inversion: .prefixedNo,
+            exclusivity: .exclusive,
+            help:
+                ArgumentHelp(
+                    String(localized: "basename", comment: ""),
+                    discussion:
+                        String(localized: "Use the input file name as the output basename", comment: "")
+                )
+        )
+        public var basename: Bool = false
         
         @OptionGroup() var commonOptions: Options
         
@@ -121,11 +153,21 @@ extension MainCommand {
             
             if let inputDirectoryName {
                 
-                print("Processing directory \(inputDirectoryName)".fg(.yellow))
+                //                let message = String.localizedStringWithFormat(
+                //                    NSLocalizedString("Hello, %@! Welcome to %@!",
+                //                                      tableName: "AppDelegate",
+                //                                      comment: "Welcome message when the app starts"),
+                //                    "Stefan", "Mozilla")
+                
+                
+                
+                print(String(localized:"Processing directory \(inputDirectoryName)",
+                             comment: "").fg(.yellow))
                 //let fileService = FileService()
                 
                 guard let filename = self.outputFileName else {
-                    print("You need to specify the output file name")
+                    print(String(localized:"You need to specify the output file name",
+                                 comment: ""))
                     return
                 }
                 
@@ -140,7 +182,7 @@ extension MainCommand {
                         
                         print("There are \(merged.playlistEntries.count) entries.")
                         print("View them? y/n")
-
+                        
                         let y = Character("y").asciiValue!
                         let ch = getch()
                         if ch == y {
@@ -160,16 +202,20 @@ extension MainCommand {
                 
             } else {
                 
+                
+                
                 if let inputFile {
                     print("Processing file \(inputFile)".fg(.yellow))
                     
                     var inputFileURL = URL(fileURLWithPath: inputFile)
                     inputFileURL.resolveSymlinksInPath()
                     inputFileURL.standardize()
-
+                    
                     guard FileManager.default.fileExists(atPath: inputFileURL.path) else {
                         preconditionFailure("file expected at \(inputFileURL.path) is missing")
                     }
+                    
+                    
                     
                     if commonOptions.verbose {
                         print("input file url: \(inputFileURL.absoluteString)")
@@ -184,6 +230,34 @@ extension MainCommand {
                     }
                     
                     playlist.removeDuplicates()
+                    
+                    if basename {
+                        let bname = inputFileURL.deletingPathExtension().lastPathComponent
+                        let ext = inputFileURL.pathExtension
+                        let parent = inputFileURL.deletingLastPathComponent()
+                        let ppath = parent.path(percentEncoded: false)
+                        // ppath has a trailing /
+                        //let newpath = "\(ppath)\(bname).su.\(ext)"
+                        
+                        var outputFileURL = URL(fileURLWithPath: ppath)
+                        outputFileURL = outputFileURL.appending(path: "\(bname).su.\(ext)")
+                        outputFileURL.resolveSymlinksInPath()
+                        // for dealing with relative paths
+                        outputFileURL.standardize()
+                        //print(outputFileURL.path)
+                        
+                        //                        print("basename: \(bname)")
+                        //                        print("ext: \(ext)")
+                        //                        print("path: \(path)")
+                        //                        print("nopercent: \(nopercent)")
+                        //                        print("newpath: \(newpath)")
+                        //                        print("outputFileURL: \(outputFileURL.absoluteString)")
+                        //                        playlist.displayPlaylist(newpath)
+                        //                        print("\(newpath)".fg(.orange))
+                        
+                        playlist.displayPlaylist(outputFileURL.path)
+                        print("\(outputFileURL.path)".fg(.orange))
+                    }
                     
                     if let path = outputFileName {
                         // path = (path as NSString).expandingTildeInPath
@@ -201,7 +275,7 @@ extension MainCommand {
                         
                         playlist.displayPlaylist(path)
                         
-                    } else {
+                    } else if !basename {
                         playlist.displayPlaylist()
                     }
                 }
