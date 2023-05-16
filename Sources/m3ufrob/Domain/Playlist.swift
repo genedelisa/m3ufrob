@@ -48,6 +48,13 @@ public class Playlist: Identifiable, ObservableObject {
     public init(fileURL: URL) {
         self.fileURL = fileURL
     }
+
+    public init(entries: [PlaylistEntry]) {
+        self.playlistEntries = entries
+
+        // TODO: what about this?
+        self.fileURL = URL(filePath: ".")
+    }
     
     /// Find all playlists in a directory and load them.
     ///
@@ -383,7 +390,10 @@ public class Playlist: Identifiable, ObservableObject {
                 
                 entry.originalExtinf = line
                 entry.title = titleString
-                entry.duration = Double(durationString)!
+                if let d = Double(durationString) {
+                    entry.duration = d
+                }
+                //entry.duration = Double(durationString)!
                 parseState = .hasExtInf
                 
                 //            } else if line.hasPrefix("#") {

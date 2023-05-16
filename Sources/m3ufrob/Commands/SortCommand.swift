@@ -125,7 +125,6 @@ extension MainCommand {
         }
         
         func run() async throws {
-            print("verbose: \(commonOptions.verbose)  ")
             
             guard #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) else {
                 print("\(Self.configuration.commandName ?? "command") isn't supported on this platform.")
@@ -218,7 +217,7 @@ extension MainCommand {
                     
                     
                     if commonOptions.verbose {
-                        print("input file url: \(inputFileURL.absoluteString)")
+                        print("input file url: \(inputFileURL.path)")
                     }
                     
                     let playlist = Playlist(fileURL: inputFileURL)

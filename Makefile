@@ -9,7 +9,7 @@
 
 SHELL 			= /bin/sh
 PROG			= m3ufrob
-SRC			= Sources/**/*.swift
+SRC			= Sources/**/**/*.swift
 VERSION 		= 0.1.0
 PREFIX 			= /usr/local
 INSTALL_DIR		= $(PREFIX)/bin/$(PROG)

@@ -48,6 +48,13 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
         super.init()
     }
     
+    public func getHost() -> String? {
+        if let url = URL(string: self.urlString) {
+            return url.host()
+        }
+        return nil
+    }
+    
     // NSObject declares the protocols Equatable, CustomStringConvertible, and Hashable
     public static func == (lhs: PlaylistEntry, rhs: PlaylistEntry) -> Bool {
         lhs.urlString == rhs.urlString &&
