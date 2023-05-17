@@ -31,6 +31,14 @@ struct Terminal {
     var urlFg: XTColorNameString = .darkMagenta
     var urlBg: XTColorNameString = .seaGreen1
     
+    func display(playlist: Playlist, path: String = "", comments: Bool = false) {
+        if playlist.sortedEntries.count > 0 {
+            display(entries: playlist.sortedEntries, path: path)
+        } else {
+            display(entries: playlist.playlistEntries, path:path)
+        }
+    }
+    
     func display(entries: [PlaylistEntry], path: String = "", comments: Bool = false) {
         
         var s = "#EXTM3U\n"

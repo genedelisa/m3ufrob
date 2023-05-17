@@ -37,8 +37,8 @@ class DirViewModel: ObservableObject {
         let environment = ProcessInfo.processInfo.environment
         return environment["APP_SANDBOX_CONTAINER_ID"] != nil
     }
-
-
+    
+    
     func read(_ selectedURL: URL) async {
         print("Selected \(selectedURL.absoluteString)")
         
@@ -69,56 +69,45 @@ class DirViewModel: ObservableObject {
     }
     
     func readPlaylists(_ result: Result<[URL], Error>) async {
-        
+
         switch result {
         case .success(let url):
+
+            selectedURL = url[0]
             
-           // do {
-                selectedURL = url[0]
+            if let selectedURL {
                 
+                print("Selected \(selectedURL.absoluteString)")
                 
-                
-                //let foo = try result.get()
-                
-                //                        guard let selectedURL: URL = try result.get().first else {
-                //                            return
-                //                        }
-                
-                if let selectedURL {
+                if selectedURL.startAccessingSecurityScopedResource() {
+                    print("startAccessingSecurityScopedResource")
                     
-                    print("Selected \(selectedURL.absoluteString)")
+                    //self.url = selectedURL
+                    //self.info.url = selectedURL
                     
-                    if selectedURL.startAccessingSecurityScopedResource() {
-                        print("startAccessingSecurityScopedResource")
-                        
-                        //self.url = selectedURL
-                        //self.info.url = selectedURL
-                        
-                       // Task {
-                            print("starting task")
-                            
-                            self.playlists = await Playlist.readPlaylistDirectory(selectedURL)
-                            print("\(playlists)")
-                            
-                            //await self.info.show(merge: false, filename: "thing" )
-                            //self.isImporting = false
-                            
-                            selectedURL.stopAccessingSecurityScopedResource()
-                            print("stopAccessingSecurityScopedResource")
-                       // }
-                        
-                        
-                    }
+                    // FIXME: reading task is hosed
+                    // Task {
+                    print("starting task")
+                    
+                    self.playlists = await Playlist.readPlaylistDirectory(selectedURL)
+                    print("\(playlists)")
+                    
+                    //await self.info.show(merge: false, filename: "thing" )
+                    //self.isImporting = false
+                    
+                    selectedURL.stopAccessingSecurityScopedResource()
+                    print("stopAccessingSecurityScopedResource")
+                    // }
+                    
                     
                 }
-//            } catch {
-//                print("\(error.localizedDescription)")
-//                self.hasError = true
-//                self.errorMessage = error.localizedDescription
-//            }
+                
+            }
             
         case .failure(let error):
-            print(error)
+            print("\(error.localizedDescription)")
+            self.hasError = true
+            self.errorMessage = error.localizedDescription
             
         }// switch
         

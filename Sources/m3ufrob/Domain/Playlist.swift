@@ -38,6 +38,9 @@ public class Playlist: Identifiable, ObservableObject {
     
     @Published var sortedEntries: [PlaylistEntry] = []
     
+    lazy var uniqueCount: Int = {
+        return self.sortedEntries.count
+    }()
     lazy var count: Int = {
         return self.playlistEntries.count
     }()
@@ -161,7 +164,7 @@ public class Playlist: Identifiable, ObservableObject {
             }
             playlistEntries.append(contentsOf: playlist.playlistEntries)
         }
-        var output = Playlist(entries: playlistEntries)
+        let output = Playlist(entries: playlistEntries)
         output.removeDuplicates()
         return output
     }
@@ -258,9 +261,7 @@ public class Playlist: Identifiable, ObservableObject {
     static func save(filePath: String, playlist: Playlist) async {
         Logger.playlist.trace("\(#function)")
         
-        
-        
-        print("writing to \(filePath)")
+//        print("writing to \(filePath)")
         
         let theString = "#EXTM3U\n" + playlist.asString()
         FileManager.default.createFile(atPath: filePath,

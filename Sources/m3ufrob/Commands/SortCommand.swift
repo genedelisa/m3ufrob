@@ -179,11 +179,11 @@ extension MainCommand {
                              comment: "").fg(.yellow))
                 //let fileService = FileService()
                 
-                guard let filename = self.outputFileName else {
-                    print(String(localized:"You need to specify the output file name",
-                                 comment: ""))
-                    return
-                }
+//                guard let filename = self.outputFileName else {
+//                    print(String(localized:"You need to specify the output file name",
+//                                 comment: ""))
+//                    return
+//                }
                 
                 let durl = URL(fileURLWithPath: inputDirectoryName)
                 let playlists = await Playlist.readPlaylistDirectory(durl)
@@ -252,7 +252,7 @@ extension MainCommand {
                         //let newpath = "\(ppath)\(bname).su.\(ext)"
                         
                         var outputFileURL = URL(fileURLWithPath: ppath)
-                        outputFileURL = outputFileURL.appending(path: "\(bname).su.\(ext)")
+                        outputFileURL = outputFileURL.appending(path: "\(bname).su.\(playlist.uniqueCount).\(ext)")
                         outputFileURL.resolveSymlinksInPath()
                         // for dealing with relative paths
                         outputFileURL.standardize()
