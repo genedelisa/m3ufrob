@@ -24,17 +24,22 @@ import Foundation
 import GDTerminalColor
 
 struct Terminal {
+    static let shared = Terminal()
+    
     var infFg: XTColorNameString = .cornsilk1
     var infBg: XTColorNameString = .maroon
     var urlFg: XTColorNameString = .darkMagenta
     var urlBg: XTColorNameString = .seaGreen1
     
-    func display(path: String, entries: [PlaylistEntry]) {
+    func display(entries: [PlaylistEntry], path: String = "", comments: Bool = false) {
         
         var s = "#EXTM3U\n"
-        s += "# Source: \(path)\n"
-        //s += "# Original Count: \(self.playlistEntries.count)\n"
-        s += "# Unique Count: \(entries.count)\n\n"
+        
+        if comments {
+            s += "# Source: \(path)\n"
+            //s += "# Original Count: \(self.playlistEntries.count)\n"
+            s += "# Unique Count: \(entries.count)\n\n"
+        }
         
         for f in entries {
             s += "\(f.originalExtinf)"

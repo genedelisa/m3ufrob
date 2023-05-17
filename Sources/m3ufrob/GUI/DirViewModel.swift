@@ -73,7 +73,7 @@ class DirViewModel: ObservableObject {
         switch result {
         case .success(let url):
             
-            do {
+           // do {
                 selectedURL = url[0]
                 
                 
@@ -111,11 +111,11 @@ class DirViewModel: ObservableObject {
                     }
                     
                 }
-            } catch {
-                print("\(error.localizedDescription)")
-                self.hasError = true
-                self.errorMessage = error.localizedDescription
-            }
+//            } catch {
+//                print("\(error.localizedDescription)")
+//                self.hasError = true
+//                self.errorMessage = error.localizedDescription
+//            }
             
         case .failure(let error):
             print(error)

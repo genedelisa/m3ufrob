@@ -50,6 +50,7 @@ You can check the links in the playlist and indicates which are dead.
         version: version,
         subcommands: [
             SortCommand.self,
+            MergeCommand.self,
             CheckLinksCommand.self,
             ByHostCommand.self,
             TimerPublishCommand.self,

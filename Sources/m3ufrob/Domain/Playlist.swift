@@ -38,6 +38,10 @@ public class Playlist: Identifiable, ObservableObject {
     
     @Published var sortedEntries: [PlaylistEntry] = []
     
+    lazy var count: Int = {
+        return self.playlistEntries.count
+    }()
+    
     // TODO: inappropriate mixing. Use a display struct to print to stdout instead.
     // in displayPlaylist when not written to file
     var infFg: XTColorNameString = .cornsilk1
@@ -47,6 +51,10 @@ public class Playlist: Identifiable, ObservableObject {
     
     public init(fileURL: URL) {
         self.fileURL = fileURL
+    }
+    
+    public init(filePath: String) {
+        self.fileURL = URL(filePath: filePath)
     }
 
     public init(entries: [PlaylistEntry]) {
@@ -139,6 +147,48 @@ public class Playlist: Identifiable, ObservableObject {
             Logger.playlist.error("Error: \(error.localizedDescription)")
         }
         return []
+    }
+    
+    @MainActor
+    static func mergePlaylists(playlists: [Playlist]) async -> Playlist {
+        Logger.playlist.trace("\(#function)")
+
+        var playlistEntries = [PlaylistEntry]()
+        
+        for playlist in playlists {
+            if playlist.count == 0 {
+                await playlist.load()
+            }
+            playlistEntries.append(contentsOf: playlist.playlistEntries)
+        }
+        var output = Playlist(entries: playlistEntries)
+        output.removeDuplicates()
+        return output
+    }
+    
+    @MainActor
+    static func mergePlaylists(playlists: [Playlist], mergedFilePath: String ) async -> Playlist {
+        Logger.playlist.trace("\(#function)")
+        
+        if FileManager.default.isWritableFile(atPath: mergedFilePath) {
+            print("\(mergedFilePath) is writable file")
+        }
+        
+        if FileManager.default.fileExists(atPath: mergedFilePath) {
+            print("\(mergedFilePath) exists")
+        } else {
+            print("\(mergedFilePath) does not exist")
+        }
+        
+        let output = Playlist(fileURL: URL(fileURLWithPath: mergedFilePath))
+        for playlist in playlists {
+            
+            await playlist.load()
+            output.playlistEntries.append(contentsOf: playlist.playlistEntries)
+        }
+        output.removeDuplicates()
+        await Playlist.save(filePath: mergedFilePath, playlist: output)
+        return output
     }
     
     @MainActor
@@ -428,7 +478,9 @@ public class Playlist: Identifiable, ObservableObject {
     
     // TODO: move this to a different struct
     //    func displayPlaylist(_ outputURL: URL? = nil) {
-    func displayPlaylist(_ path: String? = nil) {
+    func displayPlaylist(_ path: String? = nil, comments: Bool = false) {
+        
+
         
         if let path {
             //            print("\(outputURL)")
@@ -436,9 +488,11 @@ public class Playlist: Identifiable, ObservableObject {
             //            print("\(urlString)")
             
             var s = "#EXTM3U\n"
-            s += "# Source: \(self.fileURL.absoluteString)\n"
-            s += "# Original Count: \(self.playlistEntries.count)\n"
-            s += "# Unique Count: \(self.sortedEntries.count)\n\n"
+            if comments {
+                s += "# Source: \(self.fileURL.absoluteString)\n"
+                s += "# Original Count: \(self.playlistEntries.count)\n"
+                s += "# Unique Count: \(self.sortedEntries.count)\n\n"
+            }
             for f in sortedEntries {
                 s += "\(f.originalExtinf)\n"
                 s += "\n"
@@ -456,21 +510,24 @@ public class Playlist: Identifiable, ObservableObject {
             
         } else {
             
-            var s = "#EXTM3U\n"
-            s += "# Source: \(self.fileURL.absoluteString)\n"
-            s += "# Original Count: \(self.playlistEntries.count)\n"
-            s += "# Unique Count: \(self.sortedEntries.count)\n\n"
-            for f in sortedEntries {
-                s += "\(f.originalExtinf)"
-                    //.fg256(infFg).bg256(infBg)
-                s += "\n"
-                s += "\(f.urlString)"
-                    //.fg256(urlFg).bg256(urlBg)
-                s += "\n\n"
-            }
+            Terminal.shared.display(entries: sortedEntries)
             
+//            var s = "#EXTM3U\n"
+//            if comments {
+//                s += "# Source: \(self.fileURL.absoluteString)\n"
+//                s += "# Original Count: \(self.playlistEntries.count)\n"
+//                s += "# Unique Count: \(self.sortedEntries.count)\n\n"
+//            }
+//            for f in sortedEntries {
+//                s += "\(f.originalExtinf)"
+//                    //.fg256(infFg).bg256(infBg)
+//                s += "\n"
+//                s += "\(f.urlString)"
+//                    //.fg256(urlFg).bg256(urlBg)
+//                s += "\n\n"
+//            }
+//            print(s)
             
-            print(s)
             
             //            print("#EXTM3U\n")
             //

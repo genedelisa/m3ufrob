@@ -194,14 +194,14 @@ extension MainCommand {
                         print("\(host)")
                     }
                     
-                    print("There are \(hosts.count) hosts.")
-                    print("View them? y/n")
-                    
-                    let y = Character("y").asciiValue!
-                    let ch = getch()
-                    if ch == y {
-
-                    }
+//                    print("There are \(hosts.count) hosts.")
+//                    print("View them? y/n")
+//                    
+//                    let y = Character("y").asciiValue!
+//                    let ch = getch()
+//                    if ch == y {
+//
+//                    }
                     
                     return
                 }

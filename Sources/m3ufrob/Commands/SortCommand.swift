@@ -1,5 +1,5 @@
 //
-// File:         Sources
+// File:         SortCommand
 // Project:    m3ufrob
 // Package: m3ufrob
 // Product:  
@@ -25,6 +25,7 @@
 import Foundation
 import ArgumentParser
 import GDTerminalColor
+import AppKit
 
 extension MainCommand {
     
@@ -52,6 +53,18 @@ extension MainCommand {
             )
         )
         var inputFile: String?
+        
+        // maybe
+        // specify multiple files, sort/uniq them, then write to their invidual output file
+//        @Argument(
+//            parsing: .remaining,
+//            help: ArgumentHelp(
+//                String(localized: "Input playlists file names.", comment: ""),
+//                discussion:
+//                    String(localized: "The filenames of the input playlists.", comment: "")
+//            )
+//        )
+//        var inputFileNames: [String]
         
         @Option(
             name: [.customShort("o"), .long],
@@ -87,18 +100,18 @@ extension MainCommand {
         )
         var inputDirectoryName: String?
         
-        @Flag(
-            name: [.long],
-            inversion: .prefixedNo,
-            exclusivity: .exclusive,
-            help:
-                ArgumentHelp(
-                    String(localized: "Merge", comment: ""),
-                    discussion:
-                        String(localized: "Merge the playlists read from a directory..", comment: "")
-                )
-        )
-        public var merge: Bool = true
+//        @Flag(
+//            name: [.long],
+//            inversion: .prefixedNo,
+//            exclusivity: .exclusive,
+//            help:
+//                ArgumentHelp(
+//                    String(localized: "Merge", comment: ""),
+//                    discussion:
+//                        String(localized: "Merge the playlists read from a directory..", comment: "")
+//                )
+//        )
+//        public var merge: Bool = true
         
         @Flag(
             //name: [.short],
@@ -130,7 +143,9 @@ extension MainCommand {
                 print("\(Self.configuration.commandName ?? "command") isn't supported on this platform.")
                 return
             }
-            
+            let pasteboard: NSPasteboard = .general
+            pasteboard.declareTypes([NSPasteboard.PasteboardType.string], owner: nil)
+
             if commonOptions.verbose {
                 let s = "input file name: \(inputFile ?? "no input file")".justify(.left)
                     .fg256(.aqua).bg256(.deepPink3)
@@ -175,21 +190,23 @@ extension MainCommand {
                 for playlist in playlists {
                     print("Playlist: \(playlist.fileURL.absoluteString)")
                     print("Entry count: \(playlist.playlistEntries.count)")
-                    
-                    if merge {
-                        let merged = await playlist.mergeLoadedPlaylists(filePath: filename, playlists: playlists)
-                        
-                        print("There are \(merged.playlistEntries.count) entries.")
-                        print("View them? y/n")
-                        
-                        let y = Character("y").asciiValue!
-                        let ch = getch()
-                        if ch == y {
-                            merged.displayPlaylist()
-                        }
-                    } else {
-                        playlist.displayPlaylist()
-                    }
+
+                    playlist.displayPlaylist()
+
+//                    if merge {
+//                        let merged = await playlist.mergeLoadedPlaylists(filePath: filename, playlists: playlists)
+//
+//                        print("There are \(merged.playlistEntries.count) entries.")
+//                        print("View them? y/n")
+//
+//                        let y = Character("y").asciiValue!
+//                        let ch = getch()
+//                        if ch == y {
+//                            merged.displayPlaylist()
+//                        }
+//                    } else {
+//                        playlist.displayPlaylist()
+//                    }
                 }
                 
                 // fileService.userSelectedFolderURL = durl
@@ -201,8 +218,6 @@ extension MainCommand {
                 
             } else {
                 
-                
-                
                 if let inputFile {
                     print("Processing file \(inputFile)".fg(.yellow))
                     
@@ -213,8 +228,6 @@ extension MainCommand {
                     guard FileManager.default.fileExists(atPath: inputFileURL.path) else {
                         preconditionFailure("file expected at \(inputFileURL.path) is missing")
                     }
-                    
-                    
                     
                     if commonOptions.verbose {
                         print("input file url: \(inputFileURL.path)")
@@ -256,6 +269,8 @@ extension MainCommand {
                         
                         playlist.displayPlaylist(outputFileURL.path)
                         print("\(outputFileURL.path)".fg(.orange))
+                        pasteboard.setString(outputFileURL.path,
+                                             forType: NSPasteboard.PasteboardType.string)
                     }
                     
                     if let path = outputFileName {
@@ -273,6 +288,8 @@ extension MainCommand {
                         // playlist.displayPlaylist(outputURL)
                         
                         playlist.displayPlaylist(path)
+                        pasteboard.setString(path,
+                                             forType: NSPasteboard.PasteboardType.string)
                         
                     } else if !basename {
                         playlist.displayPlaylist()
