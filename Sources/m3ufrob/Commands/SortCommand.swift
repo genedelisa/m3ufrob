@@ -100,18 +100,18 @@ extension MainCommand {
         )
         var inputDirectoryName: String?
         
-//        @Flag(
-//            name: [.long],
-//            inversion: .prefixedNo,
-//            exclusivity: .exclusive,
-//            help:
-//                ArgumentHelp(
-//                    String(localized: "Merge", comment: ""),
-//                    discussion:
-//                        String(localized: "Merge the playlists read from a directory..", comment: "")
-//                )
-//        )
-//        public var merge: Bool = true
+        @Flag(
+            name: [.long],
+            inversion: .prefixedNo,
+            //exclusivity: .exclusive,
+            help:
+                ArgumentHelp(
+                    String(localized: "In place", comment: ""),
+                    discussion:
+                        String(localized: "Overwrite the original playlist with the results", comment: "")
+                )
+        )
+        public var inplace: Bool = false
         
         @Flag(
             //name: [.short],
@@ -243,7 +243,41 @@ extension MainCommand {
                     
                     playlist.removeDuplicates()
                     
-                    if basename {
+                    if inplace {
+                        
+                        var rg = SystemRandomNumberGenerator()
+                        let r = rg.next()
+                        
+                        let tmp = FileManager.default.temporaryDirectory
+                        let outputFileURL = tmp.appendingPathComponent("m3ufrob-\(r)")
+                        //print("outputFileURL: \(outputFileURL.absoluteString)")
+                        
+//                        var tempURL = URL(fileURLWithPath: FileManager.default.temporaryDirectory.path)
+//                        tempURL.appendPathComponent(inputFileURL.lastPathComponent)
+//                        print("tempURL \(tempURL.path)".fg(.orange))
+                        
+                        playlist.displayPlaylist(outputFileURL.path, comments: true)
+                        //print("\(outputFileURL.path)".fg(.orange))
+                        
+                        do {
+                            if FileManager.default.fileExists(atPath: inputFileURL.path) {
+                                print("removing input file because it exists. \(inputFileURL.path)")
+                                try FileManager.default.removeItem(atPath: inputFileURL.path)
+                            }
+                            
+                            try FileManager.default.moveItem(atPath: outputFileURL.path,
+                                                             toPath: inputFileURL.path)
+                            print("moved to \(inputFileURL.path)")
+                            
+                            pasteboard.setString(inputFileURL.path,
+                                                 forType: NSPasteboard.PasteboardType.string)
+                        } catch {
+                            stderr.write("\(error.localizedDescription)")
+                            stderr.write("could not move to \(inputFileURL.path)")
+                        }
+                    }
+                    
+                    else if basename {
                         let bname = inputFileURL.deletingPathExtension().lastPathComponent
                         let ext = inputFileURL.pathExtension
                         let parent = inputFileURL.deletingLastPathComponent()
@@ -267,13 +301,13 @@ extension MainCommand {
                         //                        playlist.displayPlaylist(newpath)
                         //                        print("\(newpath)".fg(.orange))
                         
-                        playlist.displayPlaylist(outputFileURL.path)
+                        playlist.displayPlaylist(outputFileURL.path, comments: true)
                         print("\(outputFileURL.path)".fg(.orange))
                         pasteboard.setString(outputFileURL.path,
                                              forType: NSPasteboard.PasteboardType.string)
                     }
                     
-                    if let path = outputFileName {
+                    else if let path = outputFileName {
                         // path = (path as NSString).expandingTildeInPath
                         
                         if commonOptions.verbose {

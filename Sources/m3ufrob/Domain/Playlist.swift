@@ -496,7 +496,7 @@ public class Playlist: Identifiable, ObservableObject {
             }
             for f in sortedEntries {
                 s += "\(f.originalExtinf)\n"
-                s += "\n"
+                //s += "\n"
                 s += "\(f.urlString)\n\n"
             }
             

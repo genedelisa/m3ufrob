@@ -155,3 +155,6 @@ https://blog.krzyzanowskim.com/2019/12/05/url-bookmark-yes-and-no/
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>Trinity does not require this permission for any functionality. This permission is solely listed in order to satisfy App Store requirements.</string>
     <key>UIAppFonts</key>
+
+
+https://datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.1
