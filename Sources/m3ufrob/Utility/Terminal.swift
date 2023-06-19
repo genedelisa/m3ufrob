@@ -50,11 +50,20 @@ struct Terminal {
         }
         
         for f in entries {
-            s += "\(f.originalExtinf)"
-                .fg256(infFg).bg256(infBg)
-            s += "\n"
+//            s += "\(f.originalExtinf)"
+//                .fg256(infFg).bg256(infBg)
+//            s += "\n"
+            
+            for (k,v) in f.commmands {
+                s += "#\(k): "
+                    .fg256(.yellow).bg256(.darkViolet)
+                s += "\(v)\n"
+                    .fg256(.red).bg256(.darkBlue )
+            }
+            
             s += "\(f.urlString)"
                 .fg256(urlFg).bg256(urlBg)
+            
             s += "\n\n"
         }
         print(s)

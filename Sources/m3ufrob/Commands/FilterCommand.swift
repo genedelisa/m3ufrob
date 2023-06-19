@@ -190,8 +190,6 @@ extension MainCommand {
                 let filteredPlaylist = Playlist(entries: filtered)
                 filteredPlaylist.removeDuplicates()
                 
-                
-                
                 // what is directory name now?
                 //                if basename {
                 //                    let bname = directoryURL.deletingPathExtension().lastPathComponent
@@ -230,38 +228,3 @@ extension MainCommand {
 }
 
 
-//private static let pitchPattern = "([a-gA-G]+[b|#]?)([0-9]*)"
-//
-//private static var pitchRegexp: NSRegularExpression {
-//    do {
-//        return try NSRegularExpression(pattern: pitchPattern,
-//                                       options: [NSRegularExpression.Options.caseInsensitive])
-//    } catch {
-//        fatalError("bad regexp")
-//    }
-//}
-//
-//public static func isValid(pitchWithOctave inputString: String) -> Bool {
-//    let predicate = NSPredicate(format: "SELF MATCHES %@", pitchPattern)
-//    return predicate.evaluate(with: inputString)
-//}
-//
-//public class func isFlat(_ pitchName: String) -> Bool {
-//    let flatNoteNameRegexp = "([A-Ga-g])(-|b|f)"
-//
-//    var regex: NSRegularExpression?
-//    do {
-//        regex = try NSRegularExpression(pattern: flatNoteNameRegexp,
-//            options: NSRegularExpression.Options.dotMatchesLineSeparators)
-//    } catch {
-//        log.debug("error \(error.localizedDescription)")
-//        return false
-//    }
-//    
-//    if let matchCount = regex?.numberOfMatches(in: pitchName,
-//        options: NSRegularExpression.MatchingOptions.reportProgress,
-//        range: NSRange(location: 0, length: pitchName.count)) {
-//        return matchCount > 0
-//    }
-//    return false
-//}

@@ -81,3 +81,13 @@ public func getch() -> UInt8 {
     return byte
 }
 
+
+
+//func append(_ text: String, to fileURL: URL) {
+//    guard let fileHandle = try? FileHandle(forWritingTo: fileURL) else {
+//        stderr.write("Cannot open file \(fileURL).")
+//    }
+//    fileHandle.seekToEndOfFile()
+//    fileHandle.write(text.data(using: .utf8)!)
+//    fileHandle.closeFile()
+//}

@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
+  <dict>
+
+    <key>NSCalendarsUsageDescription</key>
+    <string>$(PRODUCT_NAME) accesses upcoming events to .</string>
+
+	<key>NSContactsUsageDescription</key>
+	<string>$(PRODUCT_NAME) accesses upcoming events to find .</string>
+
+	<key>NSRemindersUsageDescription</key>
+	<string>$(PRODUCT_NAME) access upcoming reminders to find .</string>
+
+	<key>NSLocationUsageDescription</key>
+	<string>$(PRODUCT_NAME) accesses upcoming events to find .</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>$(PRODUCT_NAME)accesses upcoming events to find .</string>
+
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Send Notifications</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Need your location to determine</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Need your location to</string>
+
+
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>NSHumanReadableCopyright</key>

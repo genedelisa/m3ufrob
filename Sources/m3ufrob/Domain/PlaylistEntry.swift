@@ -32,7 +32,11 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
     public var title: String = ""
     public var duration: Double = 0.0
     public var urlString: String = ""
+    public var extImgURLString: String = ""
     public var originalExtinf: String = ""
+
+    // all the lines starting with #
+    public var commmands : [String: String] = [:]
     
     public init(title: String, duration: Double, urlString: String) {
         self.title = title
@@ -67,6 +71,9 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
         s += "duration: \(duration)\n"
         s += "urlString: \(urlString)\n"
         s += "originalExtinf: \(originalExtinf)\n"
+        for (k,v) in self.commmands {
+            s += "\(k) : \(v)\n"
+        }
         return s
     }
     
@@ -102,6 +109,7 @@ extension PlaylistEntry: Codable {
         case title
         case duration
         case urlString = "url_string"
+        case extImgURLString = "img_url_string"
     }
     
 }

@@ -80,13 +80,20 @@ public class Playlist: Identifiable, ObservableObject {
             let playlist = Playlist(fileURL: entry.fileURL)
             playlists.append(playlist)
         }
+
         
         for playlist in playlists {
             print("doing \(playlist.id)")
             
             do {
                 var lines = [String]()
-                for try await line in playlist.fileURL.lines {
+                for try await var line in playlist.fileURL.lines {
+                    if line.hasPrefix("[Log]") {
+//                        fatalError("File \(playlist.fileURL.absoluteString) has [Log] statements ")
+                        line = line.replacingOccurrences(of: "[Log] ",
+                                                         with: "",
+                                                         options: .literal, range: nil)
+                    }
                     lines.append(line)
                 }
                 playlist.playlistEntries = parse(lines)
@@ -321,7 +328,14 @@ public class Playlist: Identifiable, ObservableObject {
         
         do {
             var lines = [String]()
-            for try await line in fileURL.lines {
+            for try await var line in fileURL.lines {
+                if line.hasPrefix("[Log]") {
+                    // this is the one
+                    stderr.write("File \(fileURL.absoluteString) has [Log] statements \n")
+                    line = line.replacingOccurrences(of: "[Log] ",
+                                                     with: "",
+                                                     options: .literal, range: nil)
+                }
                 lines.append(line.trimmingCharacters(in: .whitespaces))
             }
             self.playlistEntries = Playlist.parse(lines)
@@ -387,22 +401,49 @@ public class Playlist: Identifiable, ObservableObject {
         //        self.playlistEntries.sort(using: titleSortDescriptor)
     }
     
+    //https://regex101.com
+    // given CMD:VALUE return the two components
+    static func parseCmdLine(_ line: String) -> (cmd: String, val: String) {
+        // #cmd:value
+        let extRegexp = #"#([^:]*)\s*:\s*(.*[^ ])"#
+        let cmd = line.replacingOccurrences(
+            of: extRegexp,
+            with: "$1",
+            options: .regularExpression,
+            range: nil)
+        let value = line.replacingOccurrences(
+            of: extRegexp,
+            with: "$2",
+            options: .regularExpression,
+            range: nil)
+        Logger.playlist.debug("cmd: \(cmd, privacy: .public)")
+        Logger.playlist.debug("value: \(value, privacy: .public)")
+
+        return(cmd, value)
+    }
+    
     // really simple minded. Just the extinf with dur and title and the url on the next line.
     internal static func parse(_ lines: [String]) -> [PlaylistEntry] {
         Logger.playlist.trace("\(#function)")
         //print("\(#function)")
         
         enum ParseState {
-            case empty, hasExtInf, hasURL
+            case begin, hasExtInf, hasURL
         }
         
-        var parseState: ParseState = .empty
+        var parseState: ParseState = .begin
         
         var results = [PlaylistEntry]()
         
         // # is a swift 5 raw string to avoid escaping.
         //        let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
         let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?[0-9]+),\s*(.*)"#
+        
+        // there is also this:
+        // #EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Mezzo_Logo.svg/1280px-Mezzo_Logo.svg.png" group-title="Music",Mezzo
+
+        // #EXTIMG: "https etc
+        let extImgRegexp = #"(#EXTIMG:)\s*(.*)"#
         
         var entry = PlaylistEntry()
         
@@ -411,14 +452,24 @@ public class Playlist: Identifiable, ObservableObject {
             if line.isEmpty {
                 continue
             }
-            
+
             // the "header"
             if line.hasPrefix("#EXTM3U") {
                 continue
             }
             
-            if parseState == .empty {
+            if parseState == .begin {
                 entry = PlaylistEntry()
+            }
+            
+            if line.hasPrefix("#") {
+                Logger.playlist.debug("# \(line, privacy: .public)")
+                
+                //let (cmd,val) = parseCmdLine(line)
+                let tup = parseCmdLine(line)
+                Logger.playlist.debug("cmd \(tup.cmd, privacy: .public)")
+                Logger.playlist.debug("val \(tup.val, privacy: .public)")
+                entry.commmands[tup.cmd] = tup.val
             }
             
             // #EXTINF:0, the title
@@ -455,8 +506,28 @@ public class Playlist: Identifiable, ObservableObject {
                 Logger.playlist.debug("http line: \(line, privacy: .public)")
                 entry.urlString = line
                 results.append(entry)
-                parseState = .empty
                 
+                // the url is the terminal state.
+                // this resets and creates a new entry
+                parseState = .begin
+                
+            } else if line.hasPrefix("#EXTIMG") {
+                Logger.playlist.debug("EXTIMG: \(line, privacy: .public)")
+                    
+                let imgURLString = line.replacingOccurrences(of: extImgRegexp,
+                                                             with: "$2",
+                                                             options: .regularExpression,
+                                                             range: nil)
+                //print("imgURLString: \(imgURLString)")
+                entry.extImgURLString = imgURLString
+
+                // keep going
+                parseState = .hasExtInf
+                
+            } else if line.hasPrefix("#EXTGRP") {
+                Logger.playlist.debug("EXTGRP line: \(line, privacy: .public)")
+                parseState = .hasExtInf
+
             } else {
                 
                 // doesn't have prefix #EXT i.e. the url
@@ -468,7 +539,7 @@ public class Playlist: Identifiable, ObservableObject {
                 //                }
                 
                 // reset
-                parseState = .empty
+                parseState = .begin
             }
         } // for
         
@@ -494,11 +565,21 @@ public class Playlist: Identifiable, ObservableObject {
                 s += "# Original Count: \(self.playlistEntries.count)\n"
                 s += "# Unique Count: \(self.sortedEntries.count)\n\n"
             }
+//            for f in sortedEntries {
+//                s += "\(f.originalExtinf)\n"
+//                //s += "\n"
+//                s += "\(f.urlString)\n\n"
+//            }
+            
             for f in sortedEntries {
-                s += "\(f.originalExtinf)\n"
-                //s += "\n"
+                for (k,v) in f.commmands {
+                    s += "#\(k): "
+                    s += "\(v)\n"
+                }
                 s += "\(f.urlString)\n\n"
             }
+            
+           
             
             do {
                 try s.write(toFile: path, atomically: true, encoding: .utf8)

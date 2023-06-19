@@ -86,6 +86,7 @@ https://github.com/apple/swift-evolution/blob/main/proposals/0278-package-manage
 https://developer.apple.com/documentation/xcode/importing-localizations
 https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes
 
+https://www.kodeco.com/27469286-swiftui-localization-tutorial-for-ios-getting-started
 
 
 # Security-Scoped Bookmarks

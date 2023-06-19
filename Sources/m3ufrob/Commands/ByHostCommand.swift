@@ -41,6 +41,7 @@ extension MainCommand {
               xcrun swift run m3ufrob byhost filename -o output.m3u8
               xcrun swift run m3ufrob byhost filename -v -o output.m3u8
               xcrun swift run m3ufrob byhost --input-directory-name ~/Video/test-playlists
+              xcrun swift run m3ufrob byhost --list-hosts playlist
               """,
             version: version
         )

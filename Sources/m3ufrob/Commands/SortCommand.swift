@@ -89,6 +89,19 @@ extension MainCommand {
         )
         var outputDir: URL?
         
+//        @Option(
+//            name: [.long],
+//            help: ArgumentHelp(
+//                String(localized: "Input directory.",
+//                       comment: ""),
+//                discussion:
+//                    String(localized: "The directory to read for m3u8 files.",
+//                           comment: "")
+//            ),
+//            transform: URL.init(fileURLWithPath:)
+//        )
+//        var inputDir: URL?
+        
         
         @Option(
             name: [.long],
@@ -268,6 +281,7 @@ extension MainCommand {
                             try FileManager.default.moveItem(atPath: outputFileURL.path,
                                                              toPath: inputFileURL.path)
                             print("moved to \(inputFileURL.path)")
+                            print("the file path has been copied to the pasteboard")
                             
                             pasteboard.setString(inputFileURL.path,
                                                  forType: NSPasteboard.PasteboardType.string)
