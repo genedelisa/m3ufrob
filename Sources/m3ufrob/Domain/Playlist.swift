@@ -437,8 +437,9 @@ public class Playlist: Identifiable, ObservableObject {
         
         // # is a swift 5 raw string to avoid escaping.
         //        let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
-        let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?[0-9]+),\s*(.*)"#
-        
+//        let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?:[0-9]+),\s*(.*)"#
+        let extinfoRegexp = #"/^(#EXTINF:+)[\s]*(\d+),+([[:alnum:] ()-\.]*)/"#
+
         // there is also this:
         // #EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Mezzo_Logo.svg/1280px-Mezzo_Logo.svg.png" group-title="Music",Mezzo
 
@@ -482,7 +483,7 @@ public class Playlist: Identifiable, ObservableObject {
                                                                range: nil)
                 
                 let titleString = line.replacingOccurrences(of: extinfoRegexp,
-                                                            with: "$4",
+                                                            with: "$3",
                                                             options: .regularExpression,
                                                             range: nil)
                 
@@ -547,6 +548,42 @@ public class Playlist: Identifiable, ObservableObject {
     } // parse
     
     
+    func displayPlaylistAsHTML(_ path: String? = nil, comments: Bool = false) {
+
+//        public var title: String = ""
+//        public var duration: Double = 0.0
+//        public var urlString: String = ""
+//        public var extImgURLString: String = ""
+//        public var originalExtinf: String = ""
+
+        var s = "<html>\n<body>\n"
+        for f in sortedEntries {
+//            for (k,v) in f.commmands {
+//                s += "#\(k): \n"
+//                s += "\(v)\n"
+//            }
+            
+//            if let title = f.commmands["#EXTINF:"] {
+//                s += "<p>\(title)\"</p>\n"
+//            } else {
+//                s += "<p>\(f.title)\"</p>\n"
+//            }
+            
+            s += "<div>\n"
+            s += "<p>\(f.title) - \(f.duration)</p>\n"
+            s += "<a href=\"\(f.urlString)\">\n"
+//            s += "<img src=\"\(f.extImgURLString)\"</img>\n"
+            s += "<img src=\(f.extImgURLString)</img>\n"
+            s += "</a>\n"
+            s += "</div>\n\n"
+        }
+         s += "</body>\n<html>\n"
+
+        print(s)
+        
+        
+       
+    }
     
     // TODO: move this to a different struct
     //    func displayPlaylist(_ outputURL: URL? = nil) {

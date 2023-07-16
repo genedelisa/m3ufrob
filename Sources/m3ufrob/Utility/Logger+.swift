@@ -35,7 +35,7 @@ extension OSLog {
         if let s = Bundle.module.bundleIdentifier {
             return s
         }
-        return "com.rockhoppertech.createm3u8"
+        return "com.rockhoppertech.m3u8frob"
     }()
 
     public static let general = OSLog(subsystem: subsystem, category: "General")
@@ -246,3 +246,9 @@ extension DefaultStringInterpolation {
 //        return s
 //    }
 // }
+
+public func GDLog<T>(_ message: T, file: String = #file, function: String = #function, lineNumber: Int = #line) {
+    let fileName = (file as NSString).lastPathComponent.split(separator: ".").first!
+    let now = ISO8601DateFormatter().string(from: Date())
+    print("\(now): \(fileName):\(lineNumber) \(function) - \(message)")
+}

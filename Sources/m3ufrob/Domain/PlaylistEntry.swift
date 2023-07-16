@@ -38,10 +38,11 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
     // all the lines starting with #
     public var commmands : [String: String] = [:]
     
-    public init(title: String, duration: Double, urlString: String) {
+    public init(title: String, duration: Double, urlString: String, imgUrlString: String) {
         self.title = title
         self.duration = duration
         self.urlString = urlString
+        self.extImgURLString = imgUrlString
         super.init()
     }
     public override init() {
@@ -70,6 +71,7 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
         s += "title: \(title)\n"
         s += "duration: \(duration)\n"
         s += "urlString: \(urlString)\n"
+        s += "extImgURLString: \(extImgURLString)\n"
         s += "originalExtinf: \(originalExtinf)\n"
         for (k,v) in self.commmands {
             s += "\(k) : \(v)\n"
