@@ -1,8 +1,5 @@
-//
-// File:         File.swift
-// Project:    
-// Package: 
-// Product:  
+// File:       Playlist.swift
+// Project:    m3u8frob
 //
 // Created by Gene De Lisa on 5/4/23
 //
@@ -29,33 +26,33 @@ import GDTerminalColor
 
 public class Playlist: Identifiable, ObservableObject {
     //let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Playlist")
-    
+
     public var id: UUID = UUID()
-    
+
     public var fileURL: URL
-    
+
     @Published var playlistEntries: [PlaylistEntry] = []
-    
+
     @Published var sortedEntries: [PlaylistEntry] = []
-    
+
     lazy var uniqueCount: Int = {
         return self.sortedEntries.count
     }()
     lazy var count: Int = {
         return self.playlistEntries.count
     }()
-    
+
     // TODO: inappropriate mixing. Use a display struct to print to stdout instead.
     // in displayPlaylist when not written to file
     var infFg: XTColorNameString = .cornsilk1
     var infBg: XTColorNameString = .maroon
     var urlFg: XTColorNameString = .darkMagenta
     var urlBg: XTColorNameString = .seaGreen1
-    
+
     public init(fileURL: URL) {
         self.fileURL = fileURL
     }
-    
+
     public init(filePath: String) {
         self.fileURL = URL(filePath: filePath)
     }
@@ -66,14 +63,14 @@ public class Playlist: Identifiable, ObservableObject {
         // TODO: what about this?
         self.fileURL = URL(filePath: ".")
     }
-    
+
     /// Find all playlists in a directory and load them.
     ///
     /// - Parameter url: the directory url
     /// - Returns: the loaded playlists
     static func readPlaylistDirectory(_ url: URL) async -> [Playlist] {
         Logger.playlist.trace("\(#function)")
-        
+
         let playlistFileEntries = await self.playlistsInDirectory(url)
         var playlists: [Playlist] = []
         for entry in playlistFileEntries {
@@ -81,10 +78,10 @@ public class Playlist: Identifiable, ObservableObject {
             playlists.append(playlist)
         }
 
-        
+
         for playlist in playlists {
             print("doing \(playlist.id)")
-            
+
             do {
                 var lines = [String]()
                 for try await var line in playlist.fileURL.lines {
@@ -102,7 +99,7 @@ public class Playlist: Identifiable, ObservableObject {
                 Logger.playlist.error("Could not read contents of \(playlist.fileURL)")
             }
 
-            
+
 //            if let contentsOfFile = try? String(contentsOfFile: playlist.fileURL.path, encoding: .utf8) {
 //                let lines = contentsOfFile.components(separatedBy: .newlines)
 //                playlist.playlistEntries = parse(lines)
@@ -112,26 +109,26 @@ public class Playlist: Identifiable, ObservableObject {
 //            }
         }
         return playlists
-        
+
         //        for entry in playlistFileEntries {
         //            if let contentsOfFile = try? String(contentsOfFile: entry.fileURL.path, encoding: .utf8) {
         //                let lines = contentsOfFile.components(separatedBy: .newlines)
         //                self.playlistEntries.append(contentsOf: parse(lines) )
-        
+
         //            } else {
         //                self.logger.error("Could not read contents of \(url)")
         //            }
         //        }
     }
-    
+
     @MainActor
     static func playlistsInDirectory(_ url: URL)  -> [FileEntry] {
         Logger.playlist.trace("\(#function)")
-        
+
         let keys: [URLResourceKey] = [
             .isReadableKey
         ]
-        
+
         let options: FileManager.DirectoryEnumerationOptions = [
             .skipsHiddenFiles
         ]
@@ -141,30 +138,30 @@ public class Playlist: Identifiable, ObservableObject {
                                                                     includingPropertiesForKeys: keys,
                                                                     options: options)
             print("File count \(files.count) for directory \(url.absoluteString)")
-            
+
             let playlistFiles = files.filter {
                 ["m3u", "m3u8"]
                     .contains($0.pathExtension.lowercased())
             }
             print("Playlist count \(playlistFiles.count) for directory \(url.absoluteString)")
-            
+
             let entries = playlistFiles.map { FileEntry(fileURL: $0) }
 //            print("entry count \(entries.count) for ulr \(url.absoluteString)")
-            
+
             return entries
-            
+
         } catch {
             Logger.playlist.error("Error: \(error.localizedDescription)")
         }
         return []
     }
-    
+
     @MainActor
     static func mergePlaylists(playlists: [Playlist]) async -> Playlist {
         Logger.playlist.trace("\(#function)")
 
         var playlistEntries = [PlaylistEntry]()
-        
+
         for playlist in playlists {
             if playlist.count == 0 {
                 await playlist.load()
@@ -175,24 +172,24 @@ public class Playlist: Identifiable, ObservableObject {
         output.removeDuplicates()
         return output
     }
-    
+
     @MainActor
     static func mergePlaylists(playlists: [Playlist], mergedFilePath: String ) async -> Playlist {
         Logger.playlist.trace("\(#function)")
-        
+
         if FileManager.default.isWritableFile(atPath: mergedFilePath) {
             print("\(mergedFilePath) is writable file")
         }
-        
+
         if FileManager.default.fileExists(atPath: mergedFilePath) {
             print("\(mergedFilePath) exists")
         } else {
             print("\(mergedFilePath) does not exist")
         }
-        
+
         let output = Playlist(fileURL: URL(fileURLWithPath: mergedFilePath))
         for playlist in playlists {
-            
+
             await playlist.load()
             output.playlistEntries.append(contentsOf: playlist.playlistEntries)
         }
@@ -200,11 +197,11 @@ public class Playlist: Identifiable, ObservableObject {
         await Playlist.save(filePath: mergedFilePath, playlist: output)
         return output
     }
-    
+
     @MainActor
     func mergeLoadedPlaylists(filePath: String, playlists: [Playlist] ) async -> Playlist {
         Logger.playlist.trace("\(#function)")
-        
+
 
 //
 //        let home = FileManager.default.homeDirectoryForCurrentUser
@@ -215,18 +212,18 @@ public class Playlist: Identifiable, ObservableObject {
 //            .appendingPathComponent("Desktop")
 //            .appendingPathComponent("Test file")
 //            .appendingPathExtension("txt")
-        
-        
+
+
         if FileManager.default.isWritableFile(atPath: filePath) {
             print("\(filePath) is writable file")
         }
-        
+
         if FileManager.default.fileExists(atPath: filePath) {
             print("\(filePath) exists")
         } else {
             print("\(filePath) does not exist")
         }
-        
+
         let fileURL = URL(fileURLWithPath: filePath)
         let output = Playlist(fileURL: fileURL)
         for playlist in playlists {
@@ -236,12 +233,12 @@ public class Playlist: Identifiable, ObservableObject {
         output.removeDuplicates()
         await Playlist.save(filePath: filePath, playlist: output)
         return output
-        
-        
+
+
         //        FileManager.default.createFile(atPath: filePath, contents: <#T##Data?#>)
-        
-        
-        
+
+
+
         //        if !FileManager.default.fileExists(atPath: fileURL.path) {
         //            print("\(fileURL.path) does not exist".fg(.red))
         //            do {
@@ -256,24 +253,24 @@ public class Playlist: Identifiable, ObservableObject {
         //        let fileURL = folderURL.appendingPathComponent(documentName)
 
     }
-    
+
     func loadPlaylists(playlists: [Playlist] ) async {
         Logger.playlist.trace("\(#function)")
-        
+
         for playlist in playlists {
             await playlist.load()
         }
     }
-    
+
     static func save(filePath: String, playlist: Playlist) async {
         Logger.playlist.trace("\(#function)")
-        
+
 //        print("writing to \(filePath)")
-        
+
         let theString = "#EXTM3U\n" + playlist.asString()
         FileManager.default.createFile(atPath: filePath,
                                        contents: theString.data(using: .utf8))
-        
+
         //let path = playlist.fileURL.absoluteString
         //print("writing to path \(path)")
         //        do {
@@ -282,14 +279,14 @@ public class Playlist: Identifiable, ObservableObject {
         //        } catch {
         //            print("\(error.localizedDescription)")
         //        }
-        
+
     }
-    
+
     func asString(_ useTerminalColors: Bool = false) -> String {
-        
+
         var s = ""
         if useTerminalColors {
-            s += "# Source: \(self.fileURL.absoluteString)\n"
+//            s += "# Source: \(self.fileURL.absoluteString)\n"
             s += "# Original Count: \(self.playlistEntries.count)\n"
             s += "# Unique Count: \(self.sortedEntries.count)\n\n"
             for f in sortedEntries {
@@ -301,7 +298,7 @@ public class Playlist: Identifiable, ObservableObject {
                 s += "\n\n"
             }
         } else {
-            s += "# Source: \(self.fileURL.absoluteString)\n"
+//            s += "# Source: \(self.fileURL.absoluteString)\n"
             s += "# Original Count: \(self.playlistEntries.count)\n"
             s += "# Unique Count: \(self.sortedEntries.count)\n\n"
             for f in sortedEntries {
@@ -313,19 +310,19 @@ public class Playlist: Identifiable, ObservableObject {
         }
         return s
     }
-    
+
     @MainActor
     func load() async {
         Logger.playlist.trace("\(#function)")
-        
+
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             preconditionFailure("file expected at \(fileURL.path) is missing")
         }
-        
+
         guard FileManager.default.isReadableFile(atPath: fileURL.path) else {
             preconditionFailure("file at \(fileURL.absoluteString) is not readable")
         }
-        
+
         do {
             var lines = [String]()
             for try await var line in fileURL.lines {
@@ -345,7 +342,7 @@ public class Playlist: Identifiable, ObservableObject {
 
             stderr.write("Could not read contents of \(self.fileURL)")
         }
-        
+
 //        do {
 //            let contentsOfFile = try String(contentsOfFile: fileURL.path, encoding: .utf8)
 //            let lines = contentsOfFile.components(separatedBy: .newlines)
@@ -356,7 +353,7 @@ public class Playlist: Identifiable, ObservableObject {
 //
 //            stderr.write("Could not read contents of \(self.fileURL)")
 //        }
-        
+
 //        if let contentsOfFile = try? String(contentsOfFile: fileURL.path, encoding: .utf8) {
 //            let lines = contentsOfFile.components(separatedBy: .newlines)
 //
@@ -369,30 +366,30 @@ public class Playlist: Identifiable, ObservableObject {
 //        } else {
 //            Logger.playlist.error("Could not read contents of \(self.fileURL)")
 //        }
-        
-        
-        
-        
+
+
+
+
         //self.playlistEntries.sort()
-        
+
         // self.playlistEntries = self.playlistEntries.sorted { $0.title < $1.title }
         //        self.playlistEntries = self.playlistEntries.sorted { $0.urlString < $1.urlString }
-        
+
         //        self.playlistEntries.sort { a, b in
         //            a.urlString < b.urlString
         //        }
-        
-        
+
+
         //        let titleDescriptor = SortDescriptor<PlaylistEntry>(\PlaylistEntry.title,
         //                                             comparator: .localizedStandard)
         //        let sorted = self.playlistEntries.sorted(by: titleDescriptor)
         //        let sorted = self.playlistEntries.sorted(using: titleDescriptor)
-        
-        
+
+
         //        let sortByTitle: SortDescriptor<PlaylistEntry> =
         //        sortDescriptor(key: { $0.title }, String.localizedCaseInsensitiveCompare)
-        
-        
+
+
         // introspection problem
         //        let urlSortDescriptor = SortDescriptor(\PlaylistEntry.urlString, order: .forward)
         //        self.playlistEntries.sort(using: urlSortDescriptor)
@@ -400,7 +397,7 @@ public class Playlist: Identifiable, ObservableObject {
         //        let titleSortDescriptor = SortDescriptor(\PlaylistEntry.title, order: .forward)
         //        self.playlistEntries.sort(using: titleSortDescriptor)
     }
-    
+
     //https://regex101.com
     // given CMD:VALUE return the two components
     static func parseCmdLine(_ line: String) -> (cmd: String, val: String) {
@@ -421,20 +418,20 @@ public class Playlist: Identifiable, ObservableObject {
 
         return(cmd, value)
     }
-    
+
     // really simple minded. Just the extinf with dur and title and the url on the next line.
     internal static func parse(_ lines: [String]) -> [PlaylistEntry] {
         Logger.playlist.trace("\(#function)")
         //print("\(#function)")
-        
+
         enum ParseState {
             case begin, hasExtInf, hasURL
         }
-        
+
         var parseState: ParseState = .begin
-        
+
         var results = [PlaylistEntry]()
-        
+
         // # is a swift 5 raw string to avoid escaping.
         //        let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
 //        let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?:[0-9]+),\s*(.*)"#
@@ -445,9 +442,9 @@ public class Playlist: Identifiable, ObservableObject {
 
         // #EXTIMG: "https etc
         let extImgRegexp = #"(#EXTIMG:)\s*(.*)"#
-        
+
         var entry = PlaylistEntry()
-        
+
         for var line in lines {
             line = line.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             if line.isEmpty {
@@ -458,39 +455,39 @@ public class Playlist: Identifiable, ObservableObject {
             if line.hasPrefix("#EXTM3U") {
                 continue
             }
-            
+
             if parseState == .begin {
                 entry = PlaylistEntry()
             }
-            
+
             if line.hasPrefix("#") {
                 Logger.playlist.debug("# \(line, privacy: .public)")
-                
+
                 //let (cmd,val) = parseCmdLine(line)
                 let tup = parseCmdLine(line)
                 Logger.playlist.debug("cmd \(tup.cmd, privacy: .public)")
                 Logger.playlist.debug("val \(tup.val, privacy: .public)")
                 entry.commmands[tup.cmd] = tup.val
             }
-            
+
             // #EXTINF:0, the title
             if line.hasPrefix("#EXTINF") {
                 Logger.playlist.debug("EXTINF: \(line, privacy: .public)")
-                
+
                 let durationString = line.replacingOccurrences(of: extinfoRegexp,
                                                                with: "$2",
                                                                options: .regularExpression,
                                                                range: nil)
-                
+
                 let titleString = line.replacingOccurrences(of: extinfoRegexp,
                                                             with: "$3",
                                                             options: .regularExpression,
                                                             range: nil)
-                
-                
+
+
                 Logger.playlist.debug("title: \(titleString, privacy: .public)")
                 Logger.playlist.debug("duration: \(durationString, privacy: .public)")
-                
+
                 entry.originalExtinf = line
                 entry.title = titleString
                 if let d = Double(durationString) {
@@ -498,23 +495,23 @@ public class Playlist: Identifiable, ObservableObject {
                 }
                 //entry.duration = Double(durationString)!
                 parseState = .hasExtInf
-                
+
                 //            } else if line.hasPrefix("#") {
                 //                logger.debug("comment line: \(line, privacy: .public)")
                 //                // continue
-                
+
             } else if line.hasPrefix("http") {
                 Logger.playlist.debug("http line: \(line, privacy: .public)")
                 entry.urlString = line
                 results.append(entry)
-                
+
                 // the url is the terminal state.
                 // this resets and creates a new entry
                 parseState = .begin
-                
+
             } else if line.hasPrefix("#EXTIMG") {
                 Logger.playlist.debug("EXTIMG: \(line, privacy: .public)")
-                    
+
                 let imgURLString = line.replacingOccurrences(of: extImgRegexp,
                                                              with: "$2",
                                                              options: .regularExpression,
@@ -524,30 +521,30 @@ public class Playlist: Identifiable, ObservableObject {
 
                 // keep going
                 parseState = .hasExtInf
-                
+
             } else if line.hasPrefix("#EXTGRP") {
                 Logger.playlist.debug("EXTGRP line: \(line, privacy: .public)")
                 parseState = .hasExtInf
 
             } else {
-                
+
                 // doesn't have prefix #EXT i.e. the url
                 Logger.playlist.debug("non #EXT line: \(line, privacy: .public)")
-                
+
                 //                if parseState == .hasExtInf {
                 //                    entry.urlString = line
                 //                    results.append(entry)
                 //                }
-                
+
                 // reset
                 parseState = .begin
             }
         } // for
-        
+
         return results
     } // parse
-    
-    
+
+
     func displayPlaylistAsHTML(_ path: String? = nil, comments: Bool = false) {
 
 //        public var title: String = ""
@@ -562,13 +559,13 @@ public class Playlist: Identifiable, ObservableObject {
 //                s += "#\(k): \n"
 //                s += "\(v)\n"
 //            }
-            
+
 //            if let title = f.commmands["#EXTINF:"] {
 //                s += "<p>\(title)\"</p>\n"
 //            } else {
 //                s += "<p>\(f.title)\"</p>\n"
 //            }
-            
+
             s += "<div>\n"
             s += "<p>\(f.title) - \(f.duration)</p>\n"
             s += "<a href=\"\(f.urlString)\">\n"
@@ -580,25 +577,25 @@ public class Playlist: Identifiable, ObservableObject {
          s += "</body>\n<html>\n"
 
         print(s)
-        
-        
-       
+
+
+
     }
-    
+
     // TODO: move this to a different struct
     //    func displayPlaylist(_ outputURL: URL? = nil) {
     func displayPlaylist(_ path: String? = nil, comments: Bool = false) {
-        
 
-        
+
+
         if let path {
             //            print("\(outputURL)")
             //            var urlString = outputURL.relativeString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
             //            print("\(urlString)")
-            
+
             var s = "#EXTM3U\n"
             if comments {
-                s += "# Source: \(self.fileURL.absoluteString)\n"
+                //s += "# Source: \(self.fileURL.absoluteString)\n"
                 s += "# Original Count: \(self.playlistEntries.count)\n"
                 s += "# Unique Count: \(self.sortedEntries.count)\n\n"
             }
@@ -607,7 +604,7 @@ public class Playlist: Identifiable, ObservableObject {
 //                //s += "\n"
 //                s += "\(f.urlString)\n\n"
 //            }
-            
+
             for f in sortedEntries {
                 for (k,v) in f.commmands {
                     s += "#\(k): "
@@ -615,22 +612,22 @@ public class Playlist: Identifiable, ObservableObject {
                 }
                 s += "\(f.urlString)\n\n"
             }
-            
-           
-            
+
+
+
             do {
                 try s.write(toFile: path, atomically: true, encoding: .utf8)
                 //                try s.write(toFile: outputURL.relativePath, atomically: true, encoding: .utf8)
                 //                try s.write(toFile: outputURL.absoluteString, atomically: true, encoding: .utf8)
-                
+
             } catch {
                 print("\(error.localizedDescription)".fg(.red))
             }
-            
+
         } else {
-            
+
             Terminal.shared.display(entries: sortedEntries)
-            
+
 //            var s = "#EXTM3U\n"
 //            if comments {
 //                s += "# Source: \(self.fileURL.absoluteString)\n"
@@ -646,8 +643,8 @@ public class Playlist: Identifiable, ObservableObject {
 //                s += "\n\n"
 //            }
 //            print(s)
-            
-            
+
+
             //            print("#EXTM3U\n")
             //
             //            print("# Source: \(self.fileURL.absoluteString)")
@@ -660,23 +657,23 @@ public class Playlist: Identifiable, ObservableObject {
             //            }
         }
     }
-    
+
     func removeDuplicates() {
         // unlike Unix uniq, it doesn't have to be sorted first
         //        self.playlistEntries.sort { a, b in
         //            a.urlString < b.urlString
         //        }
-        
+
         let unique = Array<PlaylistEntry>(Set<PlaylistEntry>(self.playlistEntries))
-        
+
         self.sortedEntries = unique
-        
+
         // the Set changed the order
         self.sortedEntries.sort { a, b in
             a.urlString < b.urlString
         }
     }
-    
+
     func totalDuration() -> String {
         let totalDuration = self.sortedEntries.reduce(0) { $0 + $1.duration }
         return TimeUtils.secondsToHMS(Int(totalDuration))
@@ -699,11 +696,9 @@ extension Playlist: Hashable {
     public static func == (lhs: Playlist, rhs: Playlist) -> Bool {
         return lhs.id == rhs.id
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(self.fileURL)
         hasher.combine(self.description)
     }
 }
-
-

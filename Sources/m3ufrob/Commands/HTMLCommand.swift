@@ -178,7 +178,7 @@ extension MainCommand {
                     }
                     
                     else if let spath = outputFileName {
-                        var path = (spath as NSString).expandingTildeInPath
+                        let path = (spath as NSString).expandingTildeInPath
                         
                         if commonOptions.verbose {
                             let s = "Writing to: \(path)".justify(.left)
