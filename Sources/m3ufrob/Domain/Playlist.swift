@@ -26,6 +26,11 @@ import GDTerminalColor
 
 public class Playlist: Identifiable, ObservableObject {
     //let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Playlist")
+    
+//    enum SortField: CaseIterable {
+//        case urlString
+//        case title
+//    }
 
     public var id: UUID = UUID()
 
@@ -658,20 +663,53 @@ public class Playlist: Identifiable, ObservableObject {
         }
     }
 
-    func removeDuplicates() {
+    func removeDuplicates(sortField: SortField = .urlString) {
         // unlike Unix uniq, it doesn't have to be sorted first
         //        self.playlistEntries.sort { a, b in
         //            a.urlString < b.urlString
         //        }
 
         let unique = Array<PlaylistEntry>(Set<PlaylistEntry>(self.playlistEntries))
+//        unique.sort(using: .localizedStandard)
+//        self.sortedEntries = unique
+        
+        
+        switch sortField {
+            
+        case .urlString:
+            // want to take care of numbers. i.e. 10 does not come before 2
+            self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
+                return s1.urlString.localizedStandardCompare(s2.urlString) == .orderedAscending
+            }
+        case .title:
+            self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
+                return s1.title.localizedStandardCompare(s2.title) == .orderedAscending
+            }
+        }
+        
 
-        self.sortedEntries = unique
+
+//        let urlDescriptor = SortDescriptor(\PlaylistEntry.urlString,
+//          comparator: .localizedStandard)
+//        self.sortedEntries = unique.sorted(using: urlDescriptor)
 
         // the Set changed the order
-        self.sortedEntries.sort { a, b in
-            a.urlString < b.urlString
-        }
+//        self.sortedEntries.sort { a, b in
+//            a.urlString < b.urlString
+////            let lexicalComparator = String.StandardComparator(.lexical)
+////
+////            let result = a.urlString.compare(b.urlString, options: .numeric)
+////            switch result {
+////
+////            case .orderedAscending:
+////
+////            case .orderedSame:
+////
+////            case .orderedDescending:
+////
+////            }
+//        }
+        
     }
 
     func totalDuration() -> String {

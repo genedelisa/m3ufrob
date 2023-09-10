@@ -27,6 +27,11 @@ import ArgumentParser
 import GDTerminalColor
 import AppKit
 
+enum SortField: String, EnumerableFlag, Codable {
+    case title
+    case urlString
+}
+
 extension MainCommand {
     
     struct SortCommand:  AsyncParsableCommand {
@@ -38,9 +43,15 @@ extension MainCommand {
                 String(localized: "This reads a playlist(s), then removes duplicates and sorts it.", comment: ""),
             usage: """
               xcrun swift run m3ufrob sort filename
+              xcrun swift run m3ufrob sort --inplace filename
+              
               xcrun swift run m3ufrob sort filename -o output.m3u8
               xcrun swift run m3ufrob sort filename -v -o output.m3u8
               xcrun swift run m3ufrob sort --input-directory-name ~/Video/test-playlists
+
+              xcrun swift run m3ufrob sort --title --inplace filename
+              xcrun swift run m3ufrob sort --url-string --inplace filename
+
               """,
             version: version
         )
@@ -138,6 +149,18 @@ extension MainCommand {
                 )
         )
         public var basename: Bool = false
+        
+        
+       
+
+        @Flag(exclusivity: .exclusive,
+              help: ArgumentHelp(NSLocalizedString("Choose field to sort on.", comment: "")))
+        var sortField: SortField = .urlString
+        // This will default to .urlString.
+        // If you want to force the user to specify one of the flags,
+        // do not specify a value here.
+        
+        
         
         @OptionGroup() var commonOptions: Options
         
@@ -254,7 +277,7 @@ extension MainCommand {
                         print(playlist)
                     }
                     
-                    playlist.removeDuplicates()
+                    playlist.removeDuplicates(sortField: self.sortField)
                     
                     if inplace {
                         
