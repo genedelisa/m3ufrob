@@ -30,7 +30,13 @@ import AppKit
 enum SortField: String, EnumerableFlag, Codable {
     case title
     case urlString
+    case duration
 }
+enum SortOp: String, EnumerableFlag, Codable {
+    case ascending
+    case descending
+}
+
 
 extension MainCommand {
     
@@ -51,6 +57,9 @@ extension MainCommand {
 
               xcrun swift run m3ufrob sort --title --inplace filename
               xcrun swift run m3ufrob sort --url-string --inplace filename
+              
+              xcrun swift run m3ufrob sort --duration --ascending filename
+              xcrun swift run m3ufrob sort --duration --descending filename
 
               """,
             version: version
@@ -159,9 +168,12 @@ extension MainCommand {
         // This will default to .urlString.
         // If you want to force the user to specify one of the flags,
         // do not specify a value here.
-        
-        
-        
+
+        @Flag(exclusivity: .exclusive,
+              help: ArgumentHelp(NSLocalizedString("Choose sort direction.", comment: "")))
+        var sortOp: SortOp = .ascending
+
+
         @OptionGroup() var commonOptions: Options
         
         func validate() throws {
@@ -211,7 +223,7 @@ extension MainCommand {
                 
                 
                 
-                print(String(localized:"Processing directory \(inputDirectoryName)",
+                print(String(localized:"# Processing directory \(inputDirectoryName)",
                              comment: "").fg(.yellow))
                 //let fileService = FileService()
                 
@@ -255,7 +267,7 @@ extension MainCommand {
             } else {
                 
                 if let inputFile {
-                    print("Processing file \(inputFile)".fg(.yellow))
+                    //print("Processing file \(inputFile)".fg(.yellow))
                     
                     var inputFileURL = URL(fileURLWithPath: inputFile)
                     inputFileURL.resolveSymlinksInPath()
@@ -277,7 +289,7 @@ extension MainCommand {
                         print(playlist)
                     }
                     
-                    playlist.removeDuplicates(sortField: self.sortField)
+                    playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
                     
                     if inplace {
                         

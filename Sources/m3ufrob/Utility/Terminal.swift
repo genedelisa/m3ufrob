@@ -55,10 +55,16 @@ struct Terminal {
 //            s += "\n"
             
             for (k,v) in f.commmands {
-                s += "#\(k): "
-                    .fg256(.yellow).bg256(.darkViolet)
-                s += "\(v)\n"
-                    .fg256(.red).bg256(.darkBlue )
+                if k == "EXTINF" {
+                    s += f.extInf
+                        .fg256(.yellow).bg256(.darkOrange)
+                    s += "\n"
+                } else {
+                    s += "#\(k): "
+                        .fg256(.yellow).bg256(.darkViolet)
+                    s += "\(v)\n"
+                        .fg256(.red).bg256(.darkBlue )
+                }
             }
             
             s += "\(f.urlString)"

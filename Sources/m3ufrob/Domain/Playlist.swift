@@ -69,6 +69,56 @@ public class Playlist: Identifiable, ObservableObject {
         self.fileURL = URL(filePath: ".")
     }
 
+    func foo() {
+//        NSURL *fileURL = [NSURL fileURLWithPath:@"/Users/[username]/Documents/[some_file]"];
+//        NSError *resourceError;
+//        if (![fileURL setResourceValue:@(2) forKey:NSURLLabelNumberKey error:&resourceError]) {
+//            NSLog(@"Error while setting file resource: %@", [resourceError localizedDescription]);
+//        }
+//        var values = URLResourceValues()
+//        values.tagNames = [""]
+//        self.fileURL.setResourceValues(values)
+        
+        
+        let resourceKeys: [URLResourceKey] = [
+            .tagNamesKey
+        ]
+        var resourceValues: URLResourceValues
+        do {
+            resourceValues = try fileURL.resourceValues(forKeys: Set(resourceKeys))
+            if let tagNames = resourceValues.tagNames {
+//                tagNames
+            }
+        } catch let error {
+            debugPrint("error: \(error.localizedDescription)")
+        }
+        
+        
+        
+        
+    }
+    
+    func setTag(name: String) async throws {
+        var tagValues: [String]
+        let tags = try self.fileURL.resourceValues(forKeys: [URLResourceKey.tagNamesKey])
+        if let tagNames = tags.tagNames {
+            tagValues = tagNames
+            if tagValues.contains(name) {
+                return
+            }
+            tagValues.append(name)
+        } else {
+            tagValues = [name]
+        }
+        //try fileURL.setResourceValue(tagValues, forKey: .tagNamesKey)
+        let url = fileURL as NSURL
+        try url.setResourceValue(tagValues, forKey: .tagNamesKey)
+    }
+
+    
+    
+    
+    
     /// Find all playlists in a directory and load them.
     ///
     /// - Parameter url: the directory url
@@ -440,7 +490,7 @@ public class Playlist: Identifiable, ObservableObject {
         // # is a swift 5 raw string to avoid escaping.
         //        let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
 //        let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?:[0-9]+),\s*(.*)"#
-        let extinfoRegexp = #"/^(#EXTINF:+)[\s]*(\d+),+([[:alnum:] ()-\.]*)/"#
+        let extinfoRegexp = #"^(#EXTINF:+)[\s]*(\d+),+([[:alnum:] ()-\.]*)"#
 
         // there is also this:
         // #EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Mezzo_Logo.svg/1280px-Mezzo_Logo.svg.png" group-title="Music",Mezzo
@@ -612,8 +662,13 @@ public class Playlist: Identifiable, ObservableObject {
 
             for f in sortedEntries {
                 for (k,v) in f.commmands {
-                    s += "#\(k): "
-                    s += "\(v)\n"
+                    if k == "EXTINF" {
+                        s += f.extInf
+                        s += "\n"
+                    } else {
+                        s += "#\(k): "
+                        s += "\(v)\n"
+                    }
                 }
                 s += "\(f.urlString)\n\n"
             }
@@ -663,7 +718,7 @@ public class Playlist: Identifiable, ObservableObject {
         }
     }
 
-    func removeDuplicates(sortField: SortField = .urlString) {
+    func removeDuplicates(sortField: SortField = .urlString, sortOp: SortOp = .ascending) {
         // unlike Unix uniq, it doesn't have to be sorted first
         //        self.playlistEntries.sort { a, b in
         //            a.urlString < b.urlString
@@ -685,9 +740,26 @@ public class Playlist: Identifiable, ObservableObject {
             self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
                 return s1.title.localizedStandardCompare(s2.title) == .orderedAscending
             }
+        case .duration:
+            self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
+
+                if sortOp == .ascending {
+                    Logger.domain.debug("Sorting ascending by duration")
+                    Logger.domain.debug("\(s1.duration) < \(s2.duration)")
+                    //print("|\(s1.duration)| < |\(s2.duration)| \(s1.duration <= s2.duration)")
+                    return s1.duration <= s2.duration
+                } else {
+                    Logger.domain.debug("Sorting descending by duration")
+                    Logger.domain.debug("\(s1.duration) > \(s2.duration)")
+                    //print("|\(s1.duration)| > |\(s2.duration)|  \(s1.duration > s2.duration)")
+                    return s1.duration > s2.duration
+                }
+            }
+            
+           // print("self.sortedEntries\(self.sortedEntries)")
         }
         
-
+       
 
 //        let urlDescriptor = SortDescriptor(\PlaylistEntry.urlString,
 //          comparator: .localizedStandard)
@@ -740,3 +812,16 @@ extension Playlist: Hashable {
         hasher.combine(self.description)
     }
 }
+
+//extension Playlist: Equatable {
+//    static func ==(lhs: Playlist, rhs: Playlist) -> Bool {
+//        return lhs.duration == rhs.duration &&
+//        lhs.count == rhs.count
+//    }
+//}
+
+//extension PlaylistEntry: Comparable {
+//    public static func <(lhs: PlaylistEntry, rhs: PlaylistEntry) -> Bool {
+//        return lhs.duration < rhs.duration
+//    }
+//}

@@ -34,6 +34,10 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
     public var urlString: String = ""
     public var extImgURLString: String = ""
     public var originalExtinf: String = ""
+    
+    var extInf: String {
+        return "#EXTINF:\(duration),\(title)"
+    }
 
     // all the lines starting with #
     public var commmands : [String: String] = [:]
@@ -73,6 +77,7 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
         s += "urlString: \(urlString)\n"
         s += "extImgURLString: \(extImgURLString)\n"
         s += "originalExtinf: \(originalExtinf)\n"
+        s += "extInf: \(extInf)\n"
         for (k,v) in self.commmands {
             s += "\(k) : \(v)\n"
         }
