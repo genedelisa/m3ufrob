@@ -72,7 +72,7 @@ extension MainCommand {
                     String(localized: "The filename of the input playlist.", comment: "")
             )
         )
-        var inputFile: String?
+        var inputFile: String? = "-"
         
         // maybe
         // specify multiple files, sort/uniq them, then write to their invidual output file
@@ -194,6 +194,8 @@ extension MainCommand {
             let pasteboard: NSPasteboard = .general
             pasteboard.declareTypes([NSPasteboard.PasteboardType.string], owner: nil)
 
+            
+            
             if commonOptions.verbose {
                 let s = "input file name: \(inputFile ?? "no input file")".justify(.left)
                     .fg256(.aqua).bg256(.deepPink3)
@@ -236,7 +238,9 @@ extension MainCommand {
                 let durl = URL(fileURLWithPath: inputDirectoryName)
                 let playlists = await Playlist.readPlaylistDirectory(durl)
                 for playlist in playlists {
-                    print("Playlist: \(playlist.fileURL.absoluteString)")
+                    if let fileURL = playlist.fileURL  {
+                        print("Playlist: \(fileURL.absoluteString)")
+                    }
                     print("Entry count: \(playlist.playlistEntries.count)")
 
                     playlist.displayPlaylist()
@@ -266,32 +270,61 @@ extension MainCommand {
                 
             } else {
                 
+                var playlist: Playlist
+                var inputFileURL: URL?
+                
                 if let inputFile {
                     //print("Processing file \(inputFile)".fg(.yellow))
                     
-                    var inputFileURL = URL(fileURLWithPath: inputFile)
-                    inputFileURL.resolveSymlinksInPath()
-                    inputFileURL.standardize()
+                    playlist = Playlist()
                     
-                    guard FileManager.default.fileExists(atPath: inputFileURL.path) else {
-                        preconditionFailure("file expected at \(inputFileURL.path) is missing")
+                    if inputFile == "-" {
+                        if commonOptions.verbose {
+                            print("reading from stdin")
+                        }
+                        await playlist.loadFromStdin()
+                        playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
+
+                        
+                        //inputFile = stdin.pointee
+//                        let file = FileHandle.standardInput
+//                        while let line = readLine() {
+//                           print(line)
+//                        }
+
+                    } else {
+                        
+                        inputFileURL = URL(fileURLWithPath: inputFile)
+                        if var url = inputFileURL {
+                            url.resolveSymlinksInPath()
+                            url.standardize()
+                            
+                            guard FileManager.default.fileExists(atPath: url.path) else {
+                                preconditionFailure("file expected at \(url.path) is missing")
+                            }
+                            
+                            if commonOptions.verbose {
+                                print("input file url: \(url.path)")
+                            }
+                            
+                            playlist = Playlist(fileURL: url)
+                            await playlist.load()
+                            playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
+
+                        }
                     }
-                    
-                    if commonOptions.verbose {
-                        print("input file url: \(inputFileURL.path)")
-                    }
-                    
-                    let playlist = Playlist(fileURL: inputFileURL)
-                    await playlist.load()
                     
                     if commonOptions.verbose {
                         print("here is the playlist\n")
                         print(playlist)
                     }
                     
-                    playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
+                   // playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
                     
                     if inplace {
+                        if commonOptions.verbose {
+                            print("sorting inplace\n")
+                        }
                         
                         var rg = SystemRandomNumberGenerator()
                         let r = rg.next()
@@ -307,53 +340,64 @@ extension MainCommand {
                         playlist.displayPlaylist(outputFileURL.path, comments: true)
                         //print("\(outputFileURL.path)".fg(.orange))
                         
-                        do {
-                            if FileManager.default.fileExists(atPath: inputFileURL.path) {
-                                print("removing input file because it exists. \(inputFileURL.path)")
-                                try FileManager.default.removeItem(atPath: inputFileURL.path)
+                        if let inputFileURL = inputFileURL {
+                            do {
+                                if FileManager.default.fileExists(atPath: inputFileURL.path) {
+                                    print("removing input file because it exists. \(inputFileURL.path)")
+                                    try FileManager.default.removeItem(atPath: inputFileURL.path)
+                                }
+                                
+                                try FileManager.default.moveItem(atPath: outputFileURL.path,
+                                                                 toPath: inputFileURL.path)
+                                print("moved to \(inputFileURL.path)")
+                                print("the file path has been copied to the pasteboard")
+                                
+                                pasteboard.setString(inputFileURL.path,
+                                                     forType: NSPasteboard.PasteboardType.string)
+                            } catch {
+                                stderr.write("\(error.localizedDescription)")
+                                stderr.write("could not move to \(inputFileURL.path)")
                             }
-                            
-                            try FileManager.default.moveItem(atPath: outputFileURL.path,
-                                                             toPath: inputFileURL.path)
-                            print("moved to \(inputFileURL.path)")
-                            print("the file path has been copied to the pasteboard")
-                            
-                            pasteboard.setString(inputFileURL.path,
-                                                 forType: NSPasteboard.PasteboardType.string)
-                        } catch {
-                            stderr.write("\(error.localizedDescription)")
-                            stderr.write("could not move to \(inputFileURL.path)")
                         }
+                        
+                        
                     }
                     
                     else if basename {
-                        let bname = inputFileURL.deletingPathExtension().lastPathComponent
-                        let ext = inputFileURL.pathExtension
-                        let parent = inputFileURL.deletingLastPathComponent()
-                        let ppath = parent.path(percentEncoded: false)
-                        // ppath has a trailing /
-                        //let newpath = "\(ppath)\(bname).su.\(ext)"
+                        if commonOptions.verbose {
+                            print("basename\n")
+                        }
                         
-                        var outputFileURL = URL(fileURLWithPath: ppath)
-                        outputFileURL = outputFileURL.appending(path: "\(bname).su.\(playlist.uniqueCount).\(ext)")
-                        outputFileURL.resolveSymlinksInPath()
-                        // for dealing with relative paths
-                        outputFileURL.standardize()
-                        //print(outputFileURL.path)
-                        
-                        //                        print("basename: \(bname)")
-                        //                        print("ext: \(ext)")
-                        //                        print("path: \(path)")
-                        //                        print("nopercent: \(nopercent)")
-                        //                        print("newpath: \(newpath)")
-                        //                        print("outputFileURL: \(outputFileURL.absoluteString)")
-                        //                        playlist.displayPlaylist(newpath)
-                        //                        print("\(newpath)".fg(.orange))
-                        
-                        playlist.displayPlaylist(outputFileURL.path, comments: true)
-                        print("\(outputFileURL.path)".fg(.orange))
-                        pasteboard.setString(outputFileURL.path,
-                                             forType: NSPasteboard.PasteboardType.string)
+                        if let inputFileURL = inputFileURL {
+                            
+                            let bname = inputFileURL.deletingPathExtension().lastPathComponent
+                            let ext = inputFileURL.pathExtension
+                            let parent = inputFileURL.deletingLastPathComponent()
+                            let ppath = parent.path(percentEncoded: false)
+                            // ppath has a trailing /
+                            //let newpath = "\(ppath)\(bname).su.\(ext)"
+                            
+                            var outputFileURL = URL(fileURLWithPath: ppath)
+                            outputFileURL = outputFileURL.appending(path: "\(bname).su.\(playlist.uniqueCount).\(ext)")
+                            outputFileURL.resolveSymlinksInPath()
+                            // for dealing with relative paths
+                            outputFileURL.standardize()
+                            //print(outputFileURL.path)
+                            
+                            //                        print("basename: \(bname)")
+                            //                        print("ext: \(ext)")
+                            //                        print("path: \(path)")
+                            //                        print("nopercent: \(nopercent)")
+                            //                        print("newpath: \(newpath)")
+                            //                        print("outputFileURL: \(outputFileURL.absoluteString)")
+                            //                        playlist.displayPlaylist(newpath)
+                            //                        print("\(newpath)".fg(.orange))
+                            
+                            playlist.displayPlaylist(outputFileURL.path, comments: true)
+                            print("\(outputFileURL.path)".fg(.orange))
+                            pasteboard.setString(outputFileURL.path,
+                                                 forType: NSPasteboard.PasteboardType.string)
+                        }
                     }
                     
                     else if let path = outputFileName {

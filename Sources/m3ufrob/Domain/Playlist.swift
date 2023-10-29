@@ -34,7 +34,9 @@ public class Playlist: Identifiable, ObservableObject {
 
     public var id: UUID = UUID()
 
-    public var fileURL: URL
+    public var fileURL: URL?
+    
+    public var readFromStdin = false
 
     @Published var playlistEntries: [PlaylistEntry] = []
 
@@ -54,6 +56,10 @@ public class Playlist: Identifiable, ObservableObject {
     var urlFg: XTColorNameString = .darkMagenta
     var urlBg: XTColorNameString = .seaGreen1
 
+    public init() {
+
+    }
+    
     public init(fileURL: URL) {
         self.fileURL = fileURL
     }
@@ -85,9 +91,11 @@ public class Playlist: Identifiable, ObservableObject {
         ]
         var resourceValues: URLResourceValues
         do {
-            resourceValues = try fileURL.resourceValues(forKeys: Set(resourceKeys))
-            if let tagNames = resourceValues.tagNames {
-//                tagNames
+            if let fileURL {
+                resourceValues = try fileURL.resourceValues(forKeys: Set(resourceKeys))
+                if let tagNames = resourceValues.tagNames {
+                    //                tagNames
+                }
             }
         } catch let error {
             debugPrint("error: \(error.localizedDescription)")
@@ -100,19 +108,23 @@ public class Playlist: Identifiable, ObservableObject {
     
     func setTag(name: String) async throws {
         var tagValues: [String]
-        let tags = try self.fileURL.resourceValues(forKeys: [URLResourceKey.tagNamesKey])
-        if let tagNames = tags.tagNames {
-            tagValues = tagNames
-            if tagValues.contains(name) {
-                return
+        if let fileURL {
+            let tags = try fileURL.resourceValues(forKeys: [URLResourceKey.tagNamesKey])
+            if let tagNames = tags.tagNames {
+                tagValues = tagNames
+                if tagValues.contains(name) {
+                    return
+                }
+                tagValues.append(name)
+            } else {
+                tagValues = [name]
             }
-            tagValues.append(name)
-        } else {
-            tagValues = [name]
+            
+            //try fileURL.setResourceValue(tagValues, forKey: .tagNamesKey)
+            
+            let url = fileURL as NSURL
+            try url.setResourceValue(tagValues, forKey: .tagNamesKey)
         }
-        //try fileURL.setResourceValue(tagValues, forKey: .tagNamesKey)
-        let url = fileURL as NSURL
-        try url.setResourceValue(tagValues, forKey: .tagNamesKey)
     }
 
     
@@ -133,25 +145,26 @@ public class Playlist: Identifiable, ObservableObject {
             playlists.append(playlist)
         }
 
-
         for playlist in playlists {
             print("doing \(playlist.id)")
-
-            do {
-                var lines = [String]()
-                for try await var line in playlist.fileURL.lines {
-                    if line.hasPrefix("[Log]") {
-//                        fatalError("File \(playlist.fileURL.absoluteString) has [Log] statements ")
-                        line = line.replacingOccurrences(of: "[Log] ",
-                                                         with: "",
-                                                         options: .literal, range: nil)
+            
+            if let purl = playlist.fileURL {
+                do {
+                    var lines = [String]()
+                    for try await var line in purl.lines {
+                        if line.hasPrefix("[Log]") {
+                            //                        fatalError("File \(playlist.fileURL.absoluteString) has [Log] statements ")
+                            line = line.replacingOccurrences(of: "[Log] ",
+                                                             with: "",
+                                                             options: .literal, range: nil)
+                        }
+                        lines.append(line)
                     }
-                    lines.append(line)
+                    playlist.playlistEntries = parse(lines)
+                    playlist.removeDuplicates()
+                } catch {
+                    Logger.playlist.error("Could not read contents of \(purl)")
                 }
-                playlist.playlistEntries = parse(lines)
-                playlist.removeDuplicates()
-            } catch {
-                Logger.playlist.error("Could not read contents of \(playlist.fileURL)")
             }
 
 
@@ -345,7 +358,8 @@ public class Playlist: Identifiable, ObservableObject {
             s += "# Original Count: \(self.playlistEntries.count)\n"
             s += "# Unique Count: \(self.sortedEntries.count)\n\n"
             for f in sortedEntries {
-                s += "\(f.originalExtinf)"
+//                s += "\(f.originalExtinf)"
+                s += "\(f.extInf)"
                     .fg256(infFg).bg256(infBg)
                 s += "\n"
                 s += "\(f.urlString)"
@@ -357,7 +371,8 @@ public class Playlist: Identifiable, ObservableObject {
             s += "# Original Count: \(self.playlistEntries.count)\n"
             s += "# Unique Count: \(self.sortedEntries.count)\n\n"
             for f in sortedEntries {
-                s += "\(f.originalExtinf)"
+//                s += "\(f.originalExtinf)"
+                s += "\(f.extInf)"
                 s += "\n"
                 s += "\(f.urlString)"
                 s += "\n\n"
@@ -367,8 +382,43 @@ public class Playlist: Identifiable, ObservableObject {
     }
 
     @MainActor
+    func loadFromStdin() async {
+        Logger.playlist.trace("\(#function)")
+        
+        do {
+            var lines = [String]()
+            
+            while var line = readLine() {
+//            for try await var line in fileURL.lines {
+                
+                if line.hasPrefix("[Log]") {
+                    line = line.replacingOccurrences(of: "[Log] ",
+                                                     with: "",
+                                                     options: .literal, range: nil)
+                }
+                lines.append(line.trimmingCharacters(in: .whitespaces))
+            }
+            self.playlistEntries = Playlist.parse(lines)
+        } catch  {
+            Logger.playlist.error("Could not read stdin")
+            Logger.playlist.error("\(error.localizedDescription, privacy: .public)")
+            stderr.write("Could not read stdin")
+        }
+    }
+    
+    @MainActor
     func load() async {
         Logger.playlist.trace("\(#function)")
+        if let fileURL {
+            Logger.playlist.debug("calling loading from \(fileURL)")
+            await load(fileURL: fileURL)
+        }
+    }
+    
+    @MainActor
+    func load(fileURL: URL) async {
+        Logger.playlist.trace("\(#function)")
+        Logger.playlist.debug("loading from \(fileURL)")
 
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             preconditionFailure("file expected at \(fileURL.path) is missing")
@@ -381,6 +431,8 @@ public class Playlist: Identifiable, ObservableObject {
         do {
             var lines = [String]()
             for try await var line in fileURL.lines {
+
+                
                 if line.hasPrefix("[Log]") {
                     // this is the one
                     stderr.write("File \(fileURL.absoluteString) has [Log] statements \n")
@@ -392,11 +444,12 @@ public class Playlist: Identifiable, ObservableObject {
             }
             self.playlistEntries = Playlist.parse(lines)
         } catch  {
-            Logger.playlist.error("Could not read contents of \(self.fileURL, privacy: .public)")
+            Logger.playlist.error("Could not read contents of \(fileURL, privacy: .public)")
             Logger.playlist.error("\(error.localizedDescription, privacy: .public)")
 
-            stderr.write("Could not read contents of \(self.fileURL)")
+            stderr.write("Could not read contents of \(fileURL)")
         }
+        //print(self)
 
 //        do {
 //            let contentsOfFile = try String(contentsOfFile: fileURL.path, encoding: .utf8)
@@ -490,7 +543,7 @@ public class Playlist: Identifiable, ObservableObject {
         // # is a swift 5 raw string to avoid escaping.
         //        let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
 //        let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?:[0-9]+),\s*(.*)"#
-        let extinfoRegexp = #"^(#EXTINF:+)[\s]*(\d+),+([[:alnum:] ()-\.]*)"#
+        let extinfoRegexp = #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
 
         // there is also this:
         // #EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Mezzo_Logo.svg/1280px-Mezzo_Logo.svg.png" group-title="Music",Mezzo
@@ -642,7 +695,6 @@ public class Playlist: Identifiable, ObservableObject {
     func displayPlaylist(_ path: String? = nil, comments: Bool = false) {
 
 
-
         if let path {
             //            print("\(outputURL)")
             //            var urlString = outputURL.relativeString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
@@ -728,6 +780,7 @@ public class Playlist: Identifiable, ObservableObject {
 //        unique.sort(using: .localizedStandard)
 //        self.sortedEntries = unique
         
+       // print("removeDuplicates \(sortField)")
         
         switch sortField {
             
@@ -790,10 +843,12 @@ public class Playlist: Identifiable, ObservableObject {
     }
 }
 
+// MARK: CustomStringConvertible
 extension Playlist: CustomStringConvertible {
     public var description: String {
         var s = "\(type(of: self))\n"
-        s += "fileURL: \(fileURL)\n\n"
+        s += "fileURL: \(fileURL)\n"
+        s += "playlistEntries: \(playlistEntries.count)\n"
         for f in playlistEntries {
             s += f.description
             s += "\n"

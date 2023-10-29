@@ -103,8 +103,11 @@ struct DirView: View {
             
             List(selection: $selection) {
                 ForEach(model.playlists, id: \.id) { list in
-                    Text("\(list.fileURL.lastPathComponent)")
-                        .tag(list)
+                    if let fileURL = list.fileURL {
+                        Text("\(fileURL.lastPathComponent)")
+                            .tag(list)
+                    }
+                   
                 }
             }
             .frame(minWidth: 100, minHeight: 100)

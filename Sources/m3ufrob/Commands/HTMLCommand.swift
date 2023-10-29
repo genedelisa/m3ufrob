@@ -111,7 +111,9 @@ extension MainCommand {
                 let durl = URL(fileURLWithPath: inputDirectoryName)
                 let playlists = await Playlist.readPlaylistDirectory(durl)
                 for playlist in playlists {
-                    print("Playlist: \(playlist.fileURL.absoluteString)")
+                    if let fileURL = playlist.fileURL {
+                        print("Playlist: \(fileURL.absoluteString)")
+                    }
                     print("Entry count: \(playlist.playlistEntries.count)")
 
                     playlist.displayPlaylist()

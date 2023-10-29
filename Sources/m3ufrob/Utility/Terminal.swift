@@ -41,7 +41,8 @@ struct Terminal {
     
     func display(entries: [PlaylistEntry], path: String = "", comments: Bool = false) {
         
-        var s = "#EXTM3U\n"
+//        var s = "#EXTM3U\n"
+        var s = ""
         
         if comments {
             s += "# Source: \(path)\n"

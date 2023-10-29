@@ -151,7 +151,9 @@ extension MainCommand {
         func doit(url: URL) async {
             let playlists = await Playlist.readPlaylistDirectory(url)
             for playlist in playlists {
-                print("Playlist: \(playlist.fileURL.absoluteString)")
+                if let fileURL = playlist.fileURL {
+                    print("Playlist: \(fileURL.absoluteString)")
+                }
                 print("Entry count: \(playlist.playlistEntries.count)")
             }
         }
