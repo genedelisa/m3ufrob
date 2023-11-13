@@ -55,6 +55,7 @@ class Preferences {
         case verbose
         case brief
         case fetchLimit = "fetch-limit"
+        case outputDirectory
     }
 
     let userDefaults: UserDefaults
@@ -279,6 +280,15 @@ class Preferences {
             print("removing defauts for \(bundleID)")
             UserDefaults.standard.removePersistentDomain(forName: bundleID)
             return
+        }
+    }
+    
+    var outputDirectory: String? {
+        get {
+            userDefaults.string(forKey: Keys.outputDirectory.rawValue)
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.outputDirectory.rawValue)
         }
     }
 

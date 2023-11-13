@@ -1,6 +1,6 @@
 //
-// File:         CheckLinksCommand.swift
-// Project:    
+// File: CheckLinksCommand.swift
+// Project:
 //
 // Created by Gene De Lisa on 5/4/23
 //
@@ -23,6 +23,7 @@
 import Foundation
 import ArgumentParser
 import GDTerminalColor
+import AppKit
 
 extension MainCommand {
     
@@ -53,6 +54,72 @@ extension MainCommand {
         )
         var inputFile: String
         
+        @Flag(
+            help:
+                ArgumentHelp(
+                    String(
+                        localized: "Save the output to a file.",
+                        comment: ""),
+                    discussion:
+                        String(
+                            localized: "Save the output to a file with the same basename.",
+                            comment: "")
+                )
+        )
+        var save = false
+        
+        @Option(
+            name: [.long],
+            help: ArgumentHelp(
+                String(
+                    localized: "The output directory.",
+                    comment: ""),
+                discussion:
+                    String(
+                        localized: "If --save is used, write to this directory.",
+                        comment: "")
+            )
+        )
+        var outputDir: String = FileManager.default.currentDirectoryPath
+        
+        @Option(
+            name: [.short, .long],
+            help: ArgumentHelp(
+                String(
+                    localized: "The output file.",
+                    comment: ""),
+                discussion:
+                    String(
+                        localized: "If --save is used, write to this file.",
+                        comment: "")
+            )
+        )
+        
+        var outputFile: String = ""
+        
+        @Flag(
+            name: [.long],
+            help:
+                ArgumentHelp(
+                    String(localized: "Show good links", comment: ""),
+                    discussion:
+                        String(localized: "Show good links", comment: "")
+                )
+        )
+        public var showGood: Bool = false
+        
+        @Flag(
+            name: [.long],
+            help:
+                ArgumentHelp(
+                    String(localized: "Show bad links", comment: ""),
+                    discussion:
+                        String(localized: "Show bad links", comment: "")
+                )
+        )
+        public var showBad: Bool = false
+
+        
         @OptionGroup() var commonOptions: Options
         
         func validate() throws {
@@ -71,6 +138,8 @@ extension MainCommand {
                 MainCommand.exit(withError: ExitCode.failure)
             }
             
+           
+            
             let playlist = Playlist(fileURL: inputFileURL)
             await playlist.load()
             
@@ -79,15 +148,131 @@ extension MainCommand {
                 print(playlist)
             }
             
+            var goodLinks: [PlaylistEntry] = []
+            var badLinks: [PlaylistEntry] = []
+            
             for entry in playlist.playlistEntries {
                 let url = URL(string: entry.urlString)!
                 let isOK = await self.checkLink(url)
                 if isOK {
-                    print("Link \(entry.urlString) is groovy".fg(.yellow))
+                    if commonOptions.verbose {
+                        print("Link \(entry.urlString) is groovy".fg(.yellow))
+                    }
+                    goodLinks.append(entry)
                 } else {
-                    print("Link \(entry.urlString) is dead, Jim".fg(.red))
+                    if commonOptions.verbose {
+                        print("Link \(entry.urlString) is dead, Jim".fg(.red))
+                    }
+                    badLinks.append(entry)
                 }
             }
+            
+            //print("Good links")
+            
+            if showGood {
+                for link in goodLinks {
+                    print("\(link.extInf)")
+                    print("\(link.urlString)\n")
+                }
+                //print("\n\n\n")
+            }
+            
+            //print("Bad links")
+            if showBad {
+                for link in badLinks {
+                    print("\(link.extInf)")
+                    print("\(link.urlString)\n")
+                }
+            }
+            
+            if save {
+                
+                var base = outputFile
+                if self.outputFile.isEmpty {
+                    base = URL(filePath: inputFile).deletingPathExtension().lastPathComponent
+                }
+                base += ".good"
+                let outputURL = createSaveURL(basename: base)
+                
+                FileService.shared.write(string: "#EXTM3U\n\n", to: outputURL)
+                
+                let df = ISO8601DateFormatter()
+                let now = df.string(from: Date())
+                FileService.shared.write(string: "# \(now)\n\n", to: outputURL)
+                
+                for link in goodLinks {
+                    if commonOptions.verbose {
+                        print("Writing \(link)".fg(.dodgerBlue))
+                    }
+                    FileService.shared.append(string: "\(link.extInf)\n", to: outputURL)
+                    FileService.shared.append(string: "\(link.urlString)\n\n", to: outputURL)
+                }
+            }
+        }
+        
+        func createSaveURL(basename: String) -> URL {
+            
+            var outputDir = self.outputDir
+            
+            // check preferences, then environment, then command line
+            
+            if let pref = Preferences.sharedInstance.outputDirectory {
+                if commonOptions.verbose {
+                    print("output directory from preferences: \(pref)")
+                }
+                outputDir = pref
+            }
+            
+            if let env = ProcessInfo.processInfo.environment["M3UFROB_OUTPUT_DIR"] {
+                outputDir = env
+                
+                if commonOptions.verbose {
+                    print("M3UFROB_OUTPUT_DIR: \(env)")
+                }
+            }
+            
+            var outputURL = URL(fileURLWithPath: outputDir)
+                .appendingPathComponent(basename)
+                .appendingPathExtension("m3u8")
+            
+            outputURL.resolveSymlinksInPath()
+            outputURL.standardize()
+            
+            // the path is percent encoded when the URL instance
+            // is created. The fileExists func does not like that.
+            let ucPath = outputURL.path(percentEncoded: false)
+            
+            if commonOptions.verbose {
+                print("Writing to file path: \(outputURL.path())")
+                print("Writing to file unpercent path: \(ucPath)")
+            }
+            
+            let pasteboard: NSPasteboard = .general
+            pasteboard.declareTypes([NSPasteboard.PasteboardType.string], owner: nil)
+            pasteboard.setString(
+                ucPath, forType: NSPasteboard.PasteboardType.string)
+            
+            if FileManager.default.fileExists(atPath: ucPath) {
+                print()
+                Color256.print(
+                    "\(ucPath) already exists",
+                    fg: XTColorName.red)
+                Color256.print(
+                    "Overwrite? [y/N]\n",
+                    fg: .red)
+                
+                let y = Character("y").asciiValue!
+                let inputInt = getch()
+                if inputInt != y {
+                    Color256.print("Bye", fg: .red)
+                    MainCommand.exit(withError: ExitCode.success)
+                } else {
+                    Color256.print("OK! Overwriting.", fg: .yellow)
+                }
+            }
+            
+          
+            return outputURL
         }
         
         func checkLink(_ url: URL) async -> Bool {
@@ -104,9 +289,9 @@ extension MainCommand {
                     }
                     switch httpResponse.statusCode {
                     case 400:
-                        stderr.write("400 Bad Request \(url)".fg(.red))
+                        stderr.write("400 Bad Request \(url)\n".fg(.red))
                     case 403:
-                        stderr.write("403 Forbidden: \(url)".fg(.red))
+                        stderr.write("403 Forbidden: \(url)\n".fg(.red))
                     default: break
                     }
                     return httpResponse.statusCode == 200
@@ -114,7 +299,7 @@ extension MainCommand {
                     return false
                 }
             } catch {
-                stderr.write("Error checking link: \(error.localizedDescription)".fg(.red))
+                stderr.write("Error checking link: \(error.localizedDescription)\n".fg(.red))
                 return false
             }
         }
