@@ -510,15 +510,24 @@ public class Playlist: Identifiable, ObservableObject {
     // given CMD:VALUE return the two components
     static func parseCmdLine(_ line: String) -> (cmd: String, val: String) {
         // #cmd:value
-        let extRegexp = #"#([^:]*)\s*:\s*(.*[^ ])"#
+//        let extRegexp = #"#([^:]*)\s*:\s*(.*[^ ])"#
+//        let extRegexp = #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
+        let extRegexp = #"#([^:]*)\s*:-?(\d*\.\d+),\s*(.*[^ ])"#
+        
+        
         let cmd = line.replacingOccurrences(
             of: extRegexp,
             with: "$1",
             options: .regularExpression,
             range: nil)
-        let value = line.replacingOccurrences(
+        let dur = line.replacingOccurrences(
             of: extRegexp,
             with: "$2",
+            options: .regularExpression,
+            range: nil)
+        let value = line.replacingOccurrences(
+            of: extRegexp,
+            with: "$3",
             options: .regularExpression,
             range: nil)
         Logger.playlist.debug("cmd: \(cmd, privacy: .public)")
@@ -543,8 +552,10 @@ public class Playlist: Identifiable, ObservableObject {
         // # is a swift 5 raw string to avoid escaping.
         //        let extinfoRegexp = #"(#EXTINF:)([+-]?([0-9]*[.])?[0-9]+),(.*)"#
 //        let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?:[0-9]+),\s*(.*)"#
-        let extinfoRegexp = #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
+//        let extinfoRegexp = #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
 
+        let extinfoRegexp = #"#([^:]*)\s*:(-?\d*\.\d+),\s*(.*[^ ])"#
+        
         // there is also this:
         // #EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Mezzo_Logo.svg/1280px-Mezzo_Logo.svg.png" group-title="Music",Mezzo
 
