@@ -511,9 +511,29 @@ public class Playlist: Identifiable, ObservableObject {
     static func parseCmdLine(_ line: String) -> (cmd: String, val: String) {
         // #cmd:value
 //        let extRegexp = #"#([^:]*)\s*:\s*(.*[^ ])"#
-//        let extRegexp = #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
-        let extRegexp = #"#([^:]*)\s*:-?(\d*\.\d+),\s*(.*[^ ])"#
+
+//        let extRegexp = #"#([^:]*)\s*:-?(\d*\.\d+),\s*(.*[^ ])"#
+        let extImgRegexp = #"#(EXTIMG:)\s*(.*)"#
+        let extRegexp =   #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
         
+        var regexp = extRegexp
+        
+//        if line.prefix == "EXTINFO" {
+//        } else if line.prefix == "EXTIMG" {
+//            
+//        } else if line.prefix == "" {
+//            
+//        } else {
+//            print("wtf line: \(line)")
+//        }
+
+        if line.contains("EXTINFO") {
+            regexp = extRegexp
+        }
+        
+        if line.contains("EXTIMG") {
+            regexp = extImgRegexp
+        }
         
         let cmd = line.replacingOccurrences(
             of: extRegexp,
@@ -521,13 +541,35 @@ public class Playlist: Identifiable, ObservableObject {
             options: .regularExpression,
             range: nil)
         let dur = line.replacingOccurrences(
-            of: extRegexp,
+            of: regexp,
             with: "$2",
             options: .regularExpression,
             range: nil)
         let value = line.replacingOccurrences(
-            of: extRegexp,
+            of: regexp,
             with: "$3",
+            options: .regularExpression,
+            range: nil)
+        Logger.playlist.debug("cmd: \(cmd, privacy: .public)")
+        Logger.playlist.debug("dur: \(dur, privacy: .public)")
+        Logger.playlist.debug("value: \(value, privacy: .public)")
+
+        return(cmd, value)
+    }
+    
+    static func parseImgCmdLine(_ line: String) -> (cmd: String, val: String) {
+
+        let regexp = #"(#EXTIMG):\s*(.*)"#
+        
+        let cmd = line.replacingOccurrences(
+            of: regexp,
+            with: "$1",
+            options: .regularExpression,
+            range: nil)
+
+        let value = line.replacingOccurrences(
+            of: regexp,
+            with: "$2",
             options: .regularExpression,
             range: nil)
         Logger.playlist.debug("cmd: \(cmd, privacy: .public)")
@@ -560,7 +602,8 @@ public class Playlist: Identifiable, ObservableObject {
         // #EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Mezzo_Logo.svg/1280px-Mezzo_Logo.svg.png" group-title="Music",Mezzo
 
         // #EXTIMG: "https etc
-        let extImgRegexp = #"(#EXTIMG:)\s*(.*)"#
+//        let extImgRegexp = #"(#EXTIMG:)\s*(.*)"#
+        let extImgRegexp = #"#(EXTIMG:)\s*(.*)"#
 
         var entry = PlaylistEntry()
 
@@ -583,10 +626,19 @@ public class Playlist: Identifiable, ObservableObject {
                 Logger.playlist.debug("# \(line, privacy: .public)")
 
                 //let (cmd,val) = parseCmdLine(line)
-                let tup = parseCmdLine(line)
-                Logger.playlist.debug("cmd \(tup.cmd, privacy: .public)")
-                Logger.playlist.debug("val \(tup.val, privacy: .public)")
-                entry.commmands[tup.cmd] = tup.val
+                
+                if line.hasPrefix("#EXTIMG") {
+                    let tup = parseImgCmdLine(line)
+                    Logger.playlist.debug("cmd \(tup.cmd, privacy: .public)")
+                    Logger.playlist.debug("val \(tup.val, privacy: .public)")
+                    entry.commmands[tup.cmd] = tup.val
+                }
+                if line.hasPrefix("#EXTINF") {
+                    let tup = parseCmdLine(line)
+                    Logger.playlist.debug("cmd \(tup.cmd, privacy: .public)")
+                    Logger.playlist.debug("val \(tup.val, privacy: .public)")
+                    entry.commmands[tup.cmd] = tup.val
+                }
             }
 
             // #EXTINF:0, the title
@@ -729,7 +781,7 @@ public class Playlist: Identifiable, ObservableObject {
                         s += f.extInf
                         s += "\n"
                     } else {
-                        s += "#\(k): "
+                        s += "\(k): "
                         s += "\(v)\n"
                     }
                 }

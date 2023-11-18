@@ -130,7 +130,7 @@ extension PlaylistEntry: Codable {
 
 extension PlaylistEntry: Comparable {
     public static func < (lhs: PlaylistEntry, rhs: PlaylistEntry) -> Bool {
-        print("comparable")
+        //print("comparable")
         return lhs.urlString < rhs.urlString
     }
 }
