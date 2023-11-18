@@ -79,7 +79,7 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
         s += "originalExtinf: \(originalExtinf)\n"
         s += "extInf: \(extInf)\n"
         for (k,v) in self.commmands {
-            s += "\(k) : \(v)\n"
+            s += "command: \(k) : \(v)\n"
         }
         return s
     }

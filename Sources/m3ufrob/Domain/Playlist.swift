@@ -514,7 +514,8 @@ public class Playlist: Identifiable, ObservableObject {
 
 //        let extRegexp = #"#([^:]*)\s*:-?(\d*\.\d+),\s*(.*[^ ])"#
         let extImgRegexp = #"#(EXTIMG:)\s*(.*)"#
-        let extRegexp =   #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
+//        let extRegexp =   #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
+        let extRegexp = #"(#EXTINF):\s*(-?\d*\.?\d+),(.*)"#
         
         var regexp = extRegexp
         
@@ -596,7 +597,9 @@ public class Playlist: Identifiable, ObservableObject {
 //        let extinfoRegexp = #"(#EXTINF:)\s*([+-]?([0-9]*[.])?:[0-9]+),\s*(.*)"#
 //        let extinfoRegexp = #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
 
-        let extinfoRegexp = #"#([^:]*)\s*:(-?\d*\.\d+),\s*(.*[^ ])"#
+        //let extinfoRegexp = #"#([^:]*)\s*:(-?\d*\.\d+),\s*(.*[^ ])"#
+        let extinfoRegexp = #"(#EXTINF):\s*-?(\d*\.?\d+),(.*)"#
+
         
         // there is also this:
         // #EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Mezzo_Logo.svg/1280px-Mezzo_Logo.svg.png" group-title="Music",Mezzo
@@ -635,8 +638,8 @@ public class Playlist: Identifiable, ObservableObject {
                 }
                 if line.hasPrefix("#EXTINF") {
                     let tup = parseCmdLine(line)
-                    Logger.playlist.debug("cmd \(tup.cmd, privacy: .public)")
-                    Logger.playlist.debug("val \(tup.val, privacy: .public)")
+                    Logger.playlist.debug("cmd: \(tup.cmd, privacy: .public)")
+                    Logger.playlist.debug("val: \(tup.val, privacy: .public)")
                     entry.commmands[tup.cmd] = tup.val
                 }
             }
@@ -777,7 +780,7 @@ public class Playlist: Identifiable, ObservableObject {
 
             for f in sortedEntries {
                 for (k,v) in f.commmands {
-                    if k == "EXTINF" {
+                    if k == "#EXTINF" {
                         s += f.extInf
                         s += "\n"
                     } else {
