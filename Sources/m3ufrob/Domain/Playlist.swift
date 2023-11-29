@@ -440,6 +440,13 @@ public class Playlist: Identifiable, ObservableObject {
                                                      with: "",
                                                      options: .literal, range: nil)
                 }
+                
+                // TODO: remove this eventually
+                if let s = lineWithDupeRemoved(line) {
+                    line = s
+                }
+                
+                
                 lines.append(line.trimmingCharacters(in: .whitespaces))
             }
             self.playlistEntries = Playlist.parse(lines)
@@ -505,6 +512,50 @@ public class Playlist: Identifiable, ObservableObject {
         //        let titleSortDescriptor = SortDescriptor(\PlaylistEntry.title, order: .forward)
         //        self.playlistEntries.sort(using: titleSortDescriptor)
     }
+    
+    
+    // I had files with the EXTINF duplicated on each info line
+    // #EXTINF:10,the title #EXTINF:10,the title
+    
+    func lineWithDupeRemoved(_ line: String) -> String? {
+
+        do {
+            let multiPattern = #"#EXTINF:"#
+            
+            let multiRegex = try NSRegularExpression(
+                pattern: multiPattern,
+                options: []
+            )
+            
+            let lineRange = NSRange(
+                line.startIndex..<line.endIndex,
+                in: line
+            )
+            
+            let multiMatches = multiRegex.matches(
+                in: line,
+                options: [],
+                range: lineRange
+            )
+            //print("There are \(multiMatches.count) multi matches in\n\(line)")
+            
+            if multiMatches.count > 1 {
+                let ranges = line.ranges(of: "#EXTINF:")
+                if ranges.count > 1 {
+                    let r = line.startIndex..<ranges[1].lowerBound
+                    let sub = String(line[r])
+                    //print("sub: |\(sub)|")
+                    return sub
+                }
+            } else {
+                return nil
+            }
+        } catch {
+            print("\(error)")
+            return nil
+        }
+        return nil
+    }
 
     //https://regex101.com
     // given CMD:VALUE return the two components
@@ -537,7 +588,7 @@ public class Playlist: Identifiable, ObservableObject {
         }
         
         let cmd = line.replacingOccurrences(
-            of: extRegexp,
+            of: regexp,
             with: "$1",
             options: .regularExpression,
             range: nil)
