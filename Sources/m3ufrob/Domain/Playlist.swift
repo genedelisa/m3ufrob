@@ -146,20 +146,22 @@ public class Playlist: Identifiable, ObservableObject {
         }
 
         for playlist in playlists {
-            print("doing \(playlist.id)")
+            //print("doing \(playlist.id)")
             
             if let purl = playlist.fileURL {
+                Logger.playlist.debug("\tat path \(purl.path())")
                 do {
                     var lines = [String]()
                     for try await var line in purl.lines {
                         if line.hasPrefix("[Log]") {
-                            //                        fatalError("File \(playlist.fileURL.absoluteString) has [Log] statements ")
+                            // fatalError("File \(playlist.fileURL.absoluteString) has [Log] statements ")
                             line = line.replacingOccurrences(of: "[Log] ",
                                                              with: "",
                                                              options: .literal, range: nil)
                         }
                         lines.append(line)
                     }
+                    
                     playlist.playlistEntries = parse(lines)
                     playlist.removeDuplicates()
                 } catch {
@@ -211,7 +213,7 @@ public class Playlist: Identifiable, ObservableObject {
                 ["m3u", "m3u8"]
                     .contains($0.pathExtension.lowercased())
             }
-            print("Playlist count \(playlistFiles.count) for directory \(url.absoluteString)")
+            print("Playlist count \(playlistFiles.count) for directory \(url.path())")
 
             let entries = playlistFiles.map { FileEntry(fileURL: $0) }
 //            print("entry count \(entries.count) for ulr \(url.absoluteString)")
@@ -411,19 +413,33 @@ public class Playlist: Identifiable, ObservableObject {
         Logger.playlist.trace("\(#function)")
         if let fileURL {
             Logger.playlist.debug("calling loading from \(fileURL)")
-            await load(fileURL: fileURL)
+            do {
+                try await load(fileURL: fileURL)
+
+            } catch CommandError.notARegularFile(let errorMessage) {
+                stderr.write("\(errorMessage)\n".fg(.red))
+                MainCommand.exit(withError: .none)
+            } catch {
+                stderr.write("\(error.localizedDescription)\n")
+                MainCommand.exit(withError: .none)
+            }
+            
         }
     }
     
     @MainActor
-    func load(fileURL: URL) async {
+    func load(fileURL: URL) async throws {
         Logger.playlist.trace("\(#function)")
         Logger.playlist.debug("loading from \(fileURL)")
 
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: fileURL.path, isDirectory: &isDir) else {
             preconditionFailure("file expected at \(fileURL.path) is missing")
         }
-
+        if isDir.boolValue {
+            throw CommandError.notARegularFile("Cannot read a directory: \(fileURL.path)")
+        }
+        
         guard FileManager.default.isReadableFile(atPath: fileURL.path) else {
             preconditionFailure("file at \(fileURL.absoluteString) is not readable")
         }
@@ -442,9 +458,9 @@ public class Playlist: Identifiable, ObservableObject {
                 }
                 
                 // TODO: remove this eventually
-                if let s = lineWithDupeRemoved(line) {
-                    line = s
-                }
+//                if let s = lineWithDupeRemoved(line) {
+//                    line = s
+//                }
                 
                 
                 lines.append(line.trimmingCharacters(in: .whitespaces))
@@ -887,7 +903,7 @@ public class Playlist: Identifiable, ObservableObject {
         }
     }
 
-    func removeDuplicates(sortField: SortField = .urlString, sortOp: SortOp = .ascending) {
+    func removeDuplicates(sortField: SortField = .sortByURLString, sortOp: SortOp = .ascending) {
         // unlike Unix uniq, it doesn't have to be sorted first
         //        self.playlistEntries.sort { a, b in
         //            a.urlString < b.urlString
@@ -899,18 +915,39 @@ public class Playlist: Identifiable, ObservableObject {
         
        // print("removeDuplicates \(sortField)")
         
+       // print("\(#function)".bg(.yellow).fg(.red) )
+        
         switch sortField {
             
-        case .urlString:
+        case .sortByURLString:
+           // print("sorting by urlstring")
             // want to take care of numbers. i.e. 10 does not come before 2
+            
             self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
-                return s1.urlString.localizedStandardCompare(s2.urlString) == .orderedAscending
+                if sortOp == .ascending {
+                    Logger.domain.debug("Sorting ascending by urlString")
+                    return (s1.urlString.localizedStandardCompare(s2.title) == .orderedAscending)
+                } else {
+                    Logger.domain.debug("Sorting descending by urlString")
+                    return (s1.urlString.localizedStandardCompare(s2.title) == .orderedDescending)
+                }
+
             }
-        case .title:
+        case .sortByTitle:
+           // print("sorting by title")
+            
             self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
-                return s1.title.localizedStandardCompare(s2.title) == .orderedAscending
+                if sortOp == .ascending {
+                    Logger.domain.debug("Sorting ascending by title")
+                    return (s1.title.localizedStandardCompare(s2.title) == .orderedAscending)
+                } else {
+                    Logger.domain.debug("Sorting descending by title")
+                    return (s1.title.localizedStandardCompare(s2.title) == .orderedDescending)
+                }
             }
-        case .duration:
+        case .sortByDuration:
+           // print("sorting by duration")
+            
             self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
 
                 if sortOp == .ascending {
@@ -955,6 +992,9 @@ public class Playlist: Identifiable, ObservableObject {
     }
 
     func totalDuration() -> String {
+        if self.sortedEntries.isEmpty {
+            removeDuplicates(sortField: .sortByDuration, sortOp: .ascending)
+        }
         let totalDuration = self.sortedEntries.reduce(0) { $0 + $1.duration }
         return TimeUtils.secondsToHMS(Int(totalDuration))
     }
@@ -964,7 +1004,7 @@ public class Playlist: Identifiable, ObservableObject {
 extension Playlist: CustomStringConvertible {
     public var description: String {
         var s = "\(type(of: self))\n"
-        s += "fileURL: \(fileURL)\n"
+        s += "fileURL: \(String(describing: fileURL?.path()))\n"
         s += "playlistEntries: \(playlistEntries.count)\n"
         for f in playlistEntries {
             s += f.description

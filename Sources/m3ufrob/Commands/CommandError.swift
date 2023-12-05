@@ -27,6 +27,8 @@ import os.log
 
 enum CommandError: Swift.Error {
     case helpFileNotFound
+    case notARegularFile(String)
+    case notADirectory(String)
 }
 
 extension CommandError: LocalizedError {
@@ -39,6 +41,14 @@ extension CommandError: LocalizedError {
                 comment: "Error message")
             //            return String(localized:"Could not find the help file",
             //                          comment: "Error message")
+        case .notARegularFile:
+            return localizedString(
+                "Could not ",
+                comment: "Error message")
+        case .notADirectory:
+            return localizedString(
+                "Could not ",
+                comment: "Error message")
         }
     }
     
@@ -50,6 +60,15 @@ extension CommandError: LocalizedError {
                 comment: "Error message")
             //            return String(localized:"The help file could not be read.",
             //                          comment: "Error message")
+        case .notARegularFile:
+            return localizedString(
+                "Must specify a regular file, not a directory ",
+                comment: "Error message")
+            
+        case .notADirectory:
+            return localizedString(
+                "Must specify a directory",
+                comment: "Error message")
         }
     }
     
@@ -62,6 +81,14 @@ extension CommandError: LocalizedError {
             
             //            return String(localized:"Does the help file exist? Is it in the Resources folder?",
             //                          comment: "Error message")
+        case .notARegularFile:
+            return localizedString(
+                "Could not ",
+                comment: "Error message")
+        case .notADirectory:
+            return localizedString(
+                "Could not ",
+                comment: "Error message")
         }
     }
 }

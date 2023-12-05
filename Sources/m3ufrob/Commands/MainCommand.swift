@@ -54,6 +54,7 @@ You can check the links in the playlist and indicates which are dead.
             FilterCommand.self,
             HTMLCommand.self,
             CheckLinksCommand.self,
+            InfoCommand.self,
             ByHostCommand.self,
             TimerPublishCommand.self,
             WindowCommand.self]

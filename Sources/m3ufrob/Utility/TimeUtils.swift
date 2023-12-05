@@ -32,11 +32,29 @@ struct TimeUtils {
     //spellOut = "two hours, forty-six minutes, forty seconds”
     //short = "2hr,46 min,40 sec"
     //brief = "2hr 46min 40sec"
-    static func secondsToHMS(_ seconds: Int) -> String {
+    static func secondsToHMS(_ seconds: Int,
+                             unitsStyle: DateComponentsFormatter.UnitsStyle? = .positional) -> String {
         let formatter = DateComponentsFormatter()
         formatter.allowedUnits = [.hour, .minute, .second]
-        formatter.unitsStyle = .positional
+        if let unitsStyle {
+            formatter.unitsStyle = unitsStyle
+        } else {
+            formatter.unitsStyle = .positional
+        }
         let formattedString = formatter.string(from: TimeInterval(seconds))!
+        return formattedString
+    }
+    
+    static func secondsToHMS(_ seconds: TimeInterval,
+                             unitsStyle: DateComponentsFormatter.UnitsStyle? = .positional) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute, .second]
+        if let unitsStyle {
+            formatter.unitsStyle = unitsStyle
+        } else {
+            formatter.unitsStyle = .positional
+        }
+        let formattedString = formatter.string(from: seconds)!
         return formattedString
     }
 }

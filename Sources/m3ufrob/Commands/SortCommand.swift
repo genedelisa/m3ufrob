@@ -28,9 +28,9 @@ import GDTerminalColor
 import AppKit
 
 enum SortField: String, EnumerableFlag, Codable {
-    case title
-    case urlString
-    case duration
+    case sortByTitle
+    case sortByURLString
+    case sortByDuration
 }
 enum SortOp: String, EnumerableFlag, Codable {
     case ascending
@@ -164,7 +164,7 @@ extension MainCommand {
 
         @Flag(exclusivity: .exclusive,
               help: ArgumentHelp(NSLocalizedString("Choose field to sort on.", comment: "")))
-        var sortField: SortField = .urlString
+        var sortField: SortField = .sortByURLString
         // This will default to .urlString.
         // If you want to force the user to specify one of the flags,
         // do not specify a value here.
