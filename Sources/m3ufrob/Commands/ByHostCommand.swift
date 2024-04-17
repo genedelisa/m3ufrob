@@ -232,7 +232,7 @@ extension MainCommand {
                         outputFileURL.resolveSymlinksInPath()
                         // for dealing with relative paths
                         outputFileURL.standardize()
-                        pl.displayPlaylist(outputFileURL.path)
+                        pl.displayPlaylist(outputFileURL.path, comments: true)
                         print("\(outputFileURL.path)".fg(.orange))
                         
                         pasteboard.setString(outputFileURL.path,
@@ -244,12 +244,15 @@ extension MainCommand {
                                 .fg256(.aquamarine1).bg256(.deepPink3)
                             print(s)
                         }
-                        pl.displayPlaylist(path)
+                        //pl.displayPlaylist(path)
+                        pl.displayPlaylist(path, comments: true)
+
                         
                         pasteboard.setString(path, forType: .string)
                         
                     } else if !basename {
                         pl.displayPlaylist()
+                        //pl.displayPlaylist(path, comments: true)
                     }
                     
                 } else {

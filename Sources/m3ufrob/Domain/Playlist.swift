@@ -23,6 +23,7 @@ import Foundation
 import Combine
 import os.log
 import GDTerminalColor
+import RegexBuilder
 
 public class Playlist: Identifiable, ObservableObject {
     //let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Playlist")
@@ -31,6 +32,8 @@ public class Playlist: Identifiable, ObservableObject {
 //        case urlString
 //        case title
 //    }
+    
+    static let parser = PlaylistParser()
 
     public var id: UUID = UUID()
 
@@ -162,7 +165,7 @@ public class Playlist: Identifiable, ObservableObject {
                         lines.append(line)
                     }
                     
-                    playlist.playlistEntries = parse(lines)
+                    playlist.playlistEntries = parser.parse(lines)
                     playlist.removeDuplicates()
                 } catch {
                     Logger.playlist.error("Could not read contents of \(purl)")
@@ -400,7 +403,7 @@ public class Playlist: Identifiable, ObservableObject {
                 }
                 lines.append(line.trimmingCharacters(in: .whitespaces))
             }
-            self.playlistEntries = Playlist.parse(lines)
+            self.playlistEntries = Playlist.parser.parse(lines)
         } catch  {
             Logger.playlist.error("Could not read stdin")
             Logger.playlist.error("\(error.localizedDescription, privacy: .public)")
@@ -458,14 +461,14 @@ public class Playlist: Identifiable, ObservableObject {
                 }
                 
                 // TODO: remove this eventually
-//                if let s = lineWithDupeRemoved(line) {
-//                    line = s
-//                }
-                
+                if let s = lineWithDupeRemoved(line) {
+                    line = s
+                }
                 
                 lines.append(line.trimmingCharacters(in: .whitespaces))
             }
-            self.playlistEntries = Playlist.parse(lines)
+            self.playlistEntries = Playlist.parser.parse(lines)
+            
         } catch  {
             Logger.playlist.error("Could not read contents of \(fileURL, privacy: .public)")
             Logger.playlist.error("\(error.localizedDescription, privacy: .public)")
@@ -572,58 +575,121 @@ public class Playlist: Identifiable, ObservableObject {
         }
         return nil
     }
+    
+    static func parseCmdLine(_ line: String) throws -> (cmd: String, dur:Double, title: String) {
+//    func extinfoParse(info: String) throws -> (cmd:String, dur:Float, title:String) {
+        //let regexp1 = /^#(?<cmd>.+?:)\s*(?<dur>[-+]?[0-9]+\.[0-9]+?|\.[0-9]+)\s*:(?<title>.*)/
+        
+        //let regexp = #/^#(?<cmd>.+?):\s*(?<dur>[-+]?[0-9]*\.*[0-9]+?|\.[0-9]+),\s*(?<title>[^:]*)/#
+//        let regexp =         ^(?<cmd>#EXTINF):\s*(?<dur>[-+]?[0-9]*\.*[0-9]+?|\.[0-9]+),\s*(?<title>[[:space:][:alnum:]\.]*)/
+        
+        
+
+       // /^(?<cmd>#EXTINF):\s*(?<dur>[-+]?[0-9]*\.*[0-9]+?|\.[0-9]+),\s*(?<title>[[:space:][:alnum:]'&\.\#\:-]*)/
+//        /(#EXTINF:)?([+-]?[[:space:][:digit:]\.]*),([:alnum:][:space:]['&.-]*)/
+        
+//        let regexp =
+//        /(?<cmd>#EXTINF:)?(?<dur>[+-]?[[:space:][:digit:]\.]*),(?<title>[[:alnum:][:space:]['&.-]]*)/
+        
+
+//        /(?<cmd>#EXTINF:)?(?<dur>[+-]?[[:space:][:digit:]\.]*)\s*,\s*(?<title>[a-zA-Z0-9&;,.[:space:]]*)/
+
+
+//        /(?<cmd>#EXTINF:)?(?<dur>[+-]?[[:space:][:digit:]\.]*)\s*,\s*(?<title>[[:space:]À-úa-zA-Z0-9&?:|;,.'()!-]*)/
+
+        let regexp =
+        /(?<cmd>#EXTINF:)?(?<dur>[+-]?[[:space:][:digit:]\.]*)\s*,\s*(?<title>.*)/
+        
+        if line.contains("EXTINF") {
+            do {
+                
+//                if let result = try regexp.wholeMatch(in: line.dropFirst()) {
+                if let result = try regexp.wholeMatch(in: line) {
+//                    print("Cmd: \(result.cmd)")
+//                    print("Dur: \(result.dur)")
+//                    print("Title: \(result.title)")
+                    if let d = Double(result.dur),
+                       let cmd=result.cmd {
+                       // print("returning \(cmd) \(d) \(result.title)")
+                        return (String(cmd), d, String(result.title) )
+                    }
+                    throw PlaylistError.badInput(message: "cannot parse:\(line)")
+                } else {
+                    //print("no regexp match for:")
+                    print("\(line)\n")
+                    //print("\(regexp)\n")
+                }
+            } catch {
+                print("\(error.localizedDescription)")
+                throw error
+            }
+            throw PlaylistError.badInput(message: "Shouldn't get here")
+        }
+        throw PlaylistError.badInput(message: "Shouldn't get here")
+
+        
+//        if line.contains("EXTIMG") {
+//            print("Why am I getting an image?")
+//            print("\(line)")
+//        }
+
+       
+        
+    }
+
 
     //https://regex101.com
     // given CMD:VALUE return the two components
-    static func parseCmdLine(_ line: String) -> (cmd: String, val: String) {
-        // #cmd:value
-//        let extRegexp = #"#([^:]*)\s*:\s*(.*[^ ])"#
-
-//        let extRegexp = #"#([^:]*)\s*:-?(\d*\.\d+),\s*(.*[^ ])"#
-        let extImgRegexp = #"#(EXTIMG:)\s*(.*)"#
-//        let extRegexp =   #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
-        let extRegexp = #"(#EXTINF):\s*(-?\d*\.?\d+),(.*)"#
-        
-        var regexp = extRegexp
-        
-//        if line.prefix == "EXTINFO" {
-//        } else if line.prefix == "EXTIMG" {
-//            
-//        } else if line.prefix == "" {
-//            
-//        } else {
-//            print("wtf line: \(line)")
+//    static func xparseCmdLine(_ line: String) -> (cmd: String, val: String) {
+//        // #cmd:value
+////        let extRegexp = #"#([^:]*)\s*:\s*(.*[^ ])"#
+//
+////        let extRegexp = #"#([^:]*)\s*:-?(\d*\.\d+),\s*(.*[^ ])"#
+//        let extImgRegexp = #"#(EXTIMG:)\s*(.*)"#
+////        let extRegexp =   #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
+//       // let extRegexp = #"(#EXTINF):\s*(-?\d*\.?\d+),(.*)"#
+//        let extRegexp  = #/^#(?<cmd>.+?):\s*(?<dur>[-+]?[0-9]*\.*[0-9]+?|\.[0-9]+)\s*:(?<title>[^:]*)/#
+//
+//        var regexp = extRegexp
+//        
+////        if line.prefix == "EXTINFO" {
+////        } else if line.prefix == "EXTIMG" {
+////            
+////        } else if line.prefix == "" {
+////            
+////        } else {
+////            print("wtf line: \(line)")
+////        }
+//
+//        if line.contains("EXTINF") {
+//            regexp = extRegexp
 //        }
-
-        if line.contains("EXTINFO") {
-            regexp = extRegexp
-        }
-        
-        if line.contains("EXTIMG") {
-            regexp = extImgRegexp
-        }
-        
-        let cmd = line.replacingOccurrences(
-            of: regexp,
-            with: "$1",
-            options: .regularExpression,
-            range: nil)
-        let dur = line.replacingOccurrences(
-            of: regexp,
-            with: "$2",
-            options: .regularExpression,
-            range: nil)
-        let value = line.replacingOccurrences(
-            of: regexp,
-            with: "$3",
-            options: .regularExpression,
-            range: nil)
-        Logger.playlist.debug("cmd: \(cmd, privacy: .public)")
-        Logger.playlist.debug("dur: \(dur, privacy: .public)")
-        Logger.playlist.debug("value: \(value, privacy: .public)")
-
-        return(cmd, value)
-    }
+//        
+//        if line.contains("EXTIMG") {
+//            regexp = extImgRegexp
+//        }
+//        
+//        let cmd = line.replacingOccurrences(
+//            of: regexp,
+//            with: "$1",
+//            options: .regularExpression,
+//            range: nil)
+//        let dur = line.replacingOccurrences(
+//            of: regexp,
+//            with: "$2",
+//            options: .regularExpression,
+//            range: nil)
+//        let value = line.replacingOccurrences(
+//            of: regexp,
+//            with: "$3",
+//            options: .regularExpression,
+//            range: nil)
+//        Logger.playlist.debug("cmd: \(cmd, privacy: .public)")
+//        Logger.playlist.debug("dur: \(dur, privacy: .public)")
+//        Logger.playlist.debug("value: \(value, privacy: .public)")
+//
+//        return(cmd, value)
+//    }
     
     static func parseImgCmdLine(_ line: String) -> (cmd: String, val: String) {
 
@@ -647,7 +713,7 @@ public class Playlist: Identifiable, ObservableObject {
     }
 
     // really simple minded. Just the extinf with dur and title and the url on the next line.
-    internal static func parse(_ lines: [String]) -> [PlaylistEntry] {
+    internal static func xparse(_ lines: [String]) -> [PlaylistEntry] {
         Logger.playlist.trace("\(#function)")
         //print("\(#function)")
 
@@ -704,44 +770,24 @@ public class Playlist: Identifiable, ObservableObject {
                     entry.commmands[tup.cmd] = tup.val
                 }
                 if line.hasPrefix("#EXTINF") {
-                    let tup = parseCmdLine(line)
-                    Logger.playlist.debug("cmd: \(tup.cmd, privacy: .public)")
-                    Logger.playlist.debug("val: \(tup.val, privacy: .public)")
-                    entry.commmands[tup.cmd] = tup.val
+                    do {
+                        let tup = try parseCmdLine(line)
+                        Logger.playlist.debug("cmd: \(tup.cmd, privacy: .public)")
+                        Logger.playlist.debug("dur: \(tup.dur, privacy: .public)")
+                        Logger.playlist.debug("title: \(tup.title, privacy: .public)")
+
+                        entry.originalExtinf = line
+                        entry.title = tup.title
+                        entry.duration = tup.dur
+                        entry.commmands[tup.cmd] = tup.title
+                        
+                        parseState = .hasExtInf
+                    } catch {
+                        print("\(error.localizedDescription)")
+                    }
                 }
-            }
-
-            // #EXTINF:0, the title
-            if line.hasPrefix("#EXTINF") {
-                Logger.playlist.debug("EXTINF: \(line, privacy: .public)")
-
-                let durationString = line.replacingOccurrences(of: extinfoRegexp,
-                                                               with: "$2",
-                                                               options: .regularExpression,
-                                                               range: nil)
-
-                let titleString = line.replacingOccurrences(of: extinfoRegexp,
-                                                            with: "$3",
-                                                            options: .regularExpression,
-                                                            range: nil)
-
-
-                Logger.playlist.debug("title: \(titleString, privacy: .public)")
-                Logger.playlist.debug("duration: \(durationString, privacy: .public)")
-
-                entry.originalExtinf = line
-                entry.title = titleString
-                if let d = Double(durationString) {
-                    entry.duration = d
-                }
-                //entry.duration = Double(durationString)!
-                parseState = .hasExtInf
-
-                //            } else if line.hasPrefix("#") {
-                //                logger.debug("comment line: \(line, privacy: .public)")
-                //                // continue
-
-            } else if line.hasPrefix("http") {
+//            } else if line.hasPrefix("http") {
+             if line.hasPrefix("http") {
                 Logger.playlist.debug("http line: \(line, privacy: .public)")
                 entry.urlString = line
                 results.append(entry)
@@ -780,6 +826,100 @@ public class Playlist: Identifiable, ObservableObject {
                 // reset
                 parseState = .begin
             }
+            } // has prefix
+            
+//            let videoduration=nodeElement.querySelector('[data-testid="video-duration"]');
+
+            // #EXTINF:0, the title
+//            if line.hasPrefix("#EXTINF") {
+//                Logger.playlist.debug("EXTINF: \(line, privacy: .public)")
+//                
+//               // let regexp = /^(?<cmd>.+?):\s+(?<dur>[-+]?([0-9]+(\.[0-9]+)?|\.[0-9]+))\s+:\s+(?<title>.+?)$/
+//                
+//                let regexp = #/^(?<cmd>.+?):\s+(?<dur>[-+]?([0-9]+(\.[0-9]+)?|\.[0-9]+))\s+\,\s+(?<title>.+?)$/#
+//                
+//                do {
+//                    if let result = try regexp.wholeMatch(in: line) {
+//                        print("Cmd: \(result.cmd)")
+//                        print("Dur: \(result.dur)")
+//                        print("Title: \(result.title)")
+//                    } else {
+//                        print("Could not get regexp duration")
+//                    }
+//                } catch {
+//                    print("\(error.localizedDescription)")
+//                }
+//
+//                
+//                
+//
+//                let durationString = line.replacingOccurrences(of: extinfoRegexp,
+//                                                               with: "$2",
+//                                                               options: .regularExpression,
+//                                                               range: nil)
+//
+//                let titleString = line.replacingOccurrences(of: extinfoRegexp,
+//                                                            with: "$3",
+//                                                            options: .regularExpression,
+//                                                            range: nil)
+//
+//
+//                Logger.playlist.debug("title: \(titleString, privacy: .public)")
+//                Logger.playlist.debug("duration: \(durationString, privacy: .public)")
+//
+//                entry.originalExtinf = line
+//                entry.title = titleString
+//                if let d = Double(durationString) {
+//                    entry.duration = d
+//                }
+//                //entry.duration = Double(durationString)!
+//                parseState = .hasExtInf
+//
+//                //            } else if line.hasPrefix("#") {
+//                //                logger.debug("comment line: \(line, privacy: .public)")
+//                //                // continue
+//
+////            } else if line.hasPrefix("http") {
+//            
+//             if line.hasPrefix("http") {
+//                Logger.playlist.debug("http line: \(line, privacy: .public)")
+//                entry.urlString = line
+//                results.append(entry)
+//
+//                // the url is the terminal state.
+//                // this resets and creates a new entry
+//                parseState = .begin
+//
+//            } else if line.hasPrefix("#EXTIMG") {
+//                Logger.playlist.debug("EXTIMG: \(line, privacy: .public)")
+//
+//                let imgURLString = line.replacingOccurrences(of: extImgRegexp,
+//                                                             with: "$2",
+//                                                             options: .regularExpression,
+//                                                             range: nil)
+//                //print("imgURLString: \(imgURLString)")
+//                entry.extImgURLString = imgURLString
+//
+//                // keep going
+//                parseState = .hasExtInf
+//
+//            } else if line.hasPrefix("#EXTGRP") {
+//                Logger.playlist.debug("EXTGRP line: \(line, privacy: .public)")
+//                parseState = .hasExtInf
+//
+//            } else {
+//
+//                // doesn't have prefix #EXT i.e. the url
+//                Logger.playlist.debug("non #EXT line: \(line, privacy: .public)")
+//
+//                //                if parseState == .hasExtInf {
+//                //                    entry.urlString = line
+//                //                    results.append(entry)
+//                //                }
+//
+//                // reset
+//                parseState = .begin
+//            }
         } // for
 
         return results
@@ -811,7 +951,9 @@ public class Playlist: Identifiable, ObservableObject {
             s += "<p>\(f.title) - \(f.duration)</p>\n"
             s += "<a href=\"\(f.urlString)\">\n"
 //            s += "<img src=\"\(f.extImgURLString)\"</img>\n"
-            s += "<img src=\(f.extImgURLString)</img>\n"
+
+            // <img src="img_girl.jpg" alt="Girl in a jacket" width="500" height="600">
+            s += "<img src=\(f.extImgURLString) alt=\"\(f.title)\"></img>\n"
             s += "</a>\n"
             s += "</div>\n\n"
         }
@@ -835,6 +977,8 @@ public class Playlist: Identifiable, ObservableObject {
 
             var s = "#EXTM3U\n"
             if comments {
+                let d = Date().ISO8601Format()
+                s += "# Date: \(d)\n"
                 //s += "# Source: \(self.fileURL.absoluteString)\n"
                 s += "# Original Count: \(self.playlistEntries.count)\n"
                 s += "# Unique Count: \(self.sortedEntries.count)\n\n"
@@ -847,11 +991,11 @@ public class Playlist: Identifiable, ObservableObject {
 
             for f in sortedEntries {
                 for (k,v) in f.commmands {
-                    if k == "#EXTINF" {
+                    if k == "#EXTINF:" {
                         s += f.extInf
                         s += "\n"
                     } else {
-                        s += "\(k): "
+                        s += "\(k) "
                         s += "\(v)\n"
                     }
                 }

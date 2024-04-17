@@ -326,6 +326,150 @@ class FileService: FileServiceProtocol, ObservableObject {
         //        }
 
     }
+    
+    func metaFrob() {
+        
+        let url = URL(fileURLWithPath: "/Users/genedelisa/brewlist")
+        let item = NSMetadataItem(url: url)
+        
+//        if let item,
+//           let attributes = item.values(forAttributes: item.attributes) {
+//            
+//            print("\(url)")
+//            print("\(item)")
+//            print("\(attributes)")
+//            
+//            for (k,v) in attributes {
+//                print("key \(k)")
+//                print("value \(v)")
+//
+//            }
+//        }
+        
+        // kMDItemContentModificationDate
+        
+        let sortByLastUsedDateAdded = [
+            NSSortDescriptor(key: NSMetadataItemLastUsedDateKey, ascending: false),
+            NSSortDescriptor(key: NSMetadataItemDateAddedKey, ascending: false),
+        ]
+//        let queryString = "kMDItemContentTypeTree == 'com.apple.application-bundle' && (kMDItemFSName == 'Dropshare.app' || kMDItemFSName == 'Dropshare 5.app')",
+
+        var calendar = Calendar.current
+        calendar.timeZone = NSTimeZone.local
+        let today = calendar.startOfDay(for: Date())
+        let queryString = "kMDItemContentModificationDate >= \(today)"
+        let predicate = NSPredicate(fromMetadataQueryString: queryString)
+//        let qpredicate = NSPredicate(fromMetadataQueryString: queryString)
+//        let qpredicate = NSPredicate(fromMetadataQueryString: "(kMDItemUserTags == 'Assets'cd)")
+
+        let q = MetaQuery(
+            scopes: [NSMetadataQueryLocalComputerScope],
+            //scopes: ["/"],
+            queryString: queryString,
+            sortBy: sortByLastUsedDateAdded) {
+                (items) in
+
+                for item in items {
+                    print("\(item)")
+                }
+            }
+        //handler: ([NSMetadataItem]) -> Void
 
 
+//        let q = MetaQuery(
+//            scopes: ["/"], queryString: "kMDItemContentTypeTree == 'com.apple.application-bundle' && (kMDItemFSName == 'Dropshare.app' || kMDItemFSName == 'Dropshare 5.app')", sortBy: sortByLastUsedDateAdded
+//        ) { items in
+//            guard let item = items.first(where: {
+//                item in item.path.hasSuffix("/Applications/Dropshare 5.app") || item.path.hasSuffix("/Setapp/Dropshare.app")
+//            }) ?? items.first,
+//                let url = item.value(forAttribute: NSMetadataItemURLKey) as? URL
+//            else {
+//                return
+//            }
+//
+//        } {
+//            
+//        }
+
+//        let scopes = ["/"]
+//        let queryString = "kMDItemContentTypeTree == 'com.apple.application-bundle' && (kMDItemFSName == 'Dropshare.app' || kMDItemFSName == 'Dropshare 5.app')"
+//        let sortByLastUsedDateAdded = [
+//            NSSortDescriptor(key: NSMetadataItemLastUsedDateKey, ascending: false),
+//            NSSortDescriptor(key: NSMetadataItemDateAddedKey, ascending: false),
+//        ]
+//        let q = NSMetadataQuery()
+//        q.searchScopes = scopes
+//        q.predicate = NSPredicate(fromMetadataQueryString: queryString)
+//        q.sortDescriptors = sortByLastUsedDateAdded
+
+
+    }
+
+
+}
+
+extension NSMetadataItem {
+    var path: String {
+        (value(forAttribute: NSMetadataItemPathKey) as? String) ?? ""
+    }
+}
+
+class MetaQuery {
+    
+//    init(scopes: [String], queryPredicate: NSPredicate, sortBy: [NSSortDescriptor] = [], handler: @escaping ([NSMetadataItem]) -> Void) {
+//        
+//    }
+    
+    init(scopes: [String], queryString: String, sortBy: [NSSortDescriptor] = [], handler: @escaping ([NSMetadataItem]) -> Void) {
+        
+        let q = NSMetadataQuery()
+        q.searchScopes = scopes
+        q.predicate = NSPredicate(fromMetadataQueryString: queryString)
+        q.sortDescriptors = sortBy
+        q.operationQueue = MetaQuery.queryOperationQueue
+
+        MetaQuery.queryOperationQueue.addOperation {
+            q.start()
+        }
+        
+        query = q
+        
+        observer = NotificationCenter.default.addObserver(forName: NSNotification.Name.NSMetadataQueryDidFinishGathering,
+                                                          object: q,
+                                                          queue: MetaQuery.queryOperationQueue) {
+            [weak self] notification in
+            
+            print("Finished gathering")
+            
+            guard let query = notification.object as? NSMetadataQuery,
+                  let items = query.results as? [NSMetadataItem]
+            else {
+                return
+            }
+            
+            MetaQuery.queryOperationQueue.addOperation {
+                q.stop()
+            }
+            if let observer = self?.observer {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            DispatchQueue.main.async {
+                handler(items)
+            }
+
+        }
+    }
+
+    deinit {
+        print("deinit stopping")
+        query.stop()
+        if let observer {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
+    static let queryOperationQueue = OperationQueue()
+
+    let query: NSMetadataQuery
+    var observer: NSObjectProtocol?
 }

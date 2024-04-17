@@ -1,16 +1,27 @@
 #EXTM3U
+# Original Count: 7
+# Unique Count: 7
 
-#EXTIMG: "https://foo.com/a/NGI4MmMzMzJlZTI3NmY3ZTAxZGQ2ZGEyNjQxOThiMTE/s(w:526,h:298),webp/019/549/949/v2/526x298.213.webp"
-#EXTINF:-1.0,The title
-https://foo.com/videos/something-5831564
-
-
-#EXTIMG: "https://foo.com/a/NGI4MmMzMzJlZTI3NmY3ZTAxZGQ2ZGEyNjQxOThiMTE/s(w:526,h:298),webp/019/549/949/v2/526x298.213.webp"
-#EXTINF:-1.0,another
-https://foo.com/wp-content/uploads/2018/09/Thing.foo
-
-#EXTINF:-1.0,another
+#EXTINF:1.0,another
 https://www.foo.com/videos/311422/thing.foo
 
-#EXTINF:-1.0,another
+#EXTINF:1.0,another
 https://www.foo.com/videos/536102/thing.foo
+
+#EXTIMG: "https://foo.com/a/NGI4MmMzMzJlZTI3NmY3ZTAxZGQ2ZGEyNjQxOThiMTE/s(w:526,h:298),webp/019/549/949/v2/526x298.213.webp"
+#EXTINF:1.0,another
+https://foo.com/wp-content/uploads/2018/09/Thing.foo
+
+#EXTINF:0.0,zero title
+https://foo.com/videos/whatever
+
+#EXTINF:1.0,The title
+#EXTIMG: "https://foo.com/a/NGI4MmMzMzJlZTI3NmY3ZTAxZGQ2ZGEyNjQxOThiMTE/s(w:526,h:298),webp/019/549/949/v2/526x298.213.webp"
+https://foo.com/videos/something-5831564
+
+#EXTINF:1.0,title
+http://www.foo.com/whatever
+
+#EXTINF:1.0,neg title
+http://www.foo.com/whatever
+

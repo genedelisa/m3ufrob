@@ -49,18 +49,25 @@ extension MainCommand {
                 String(localized: "This reads a playlist(s), then removes duplicates and sorts it.", comment: ""),
             usage: """
               xcrun swift run m3ufrob sort filename
-              xcrun swift run m3ufrob sort --inplace filename
-              
-              xcrun swift run m3ufrob sort filename -o output.m3u8
-              xcrun swift run m3ufrob sort filename -v -o output.m3u8
-              xcrun swift run m3ufrob sort --input-directory-name ~/Video/test-playlists
+              m3ufrob sort filename
 
-              xcrun swift run m3ufrob sort --title --inplace filename
-              xcrun swift run m3ufrob sort --url-string --inplace filename
+              m3ufrob sort --inplace filename
               
-              xcrun swift run m3ufrob sort --duration --ascending filename
-              xcrun swift run m3ufrob sort --duration --descending filename
+              m3ufrob sort filename -o output.m3u8
+              m3ufrob sort filename -v -o output.m3u8
+              m3ufrob sort --input-directory-name ~/Video/test-playlists
 
+              m3ufrob sort --title --inplace filename
+              m3ufrob sort --url-string --inplace filename
+              
+              m3ufrob sort --sort-by-title filename
+              m3ufrob sort --sort-by-url-string filename
+              m3ufrob sort --sort-by-duration filename
+              
+              cat file.m3u8 | m3ufrob sort --sort-by-title -
+              cat file.m3u8 | m3ufrob sort --sort-by-title --descending -
+              cat file.m3u8 | m3ufrob sort --sort-by-title --asscending -
+              
               """,
             version: version
         )
@@ -235,6 +242,8 @@ extension MainCommand {
 //                    return
 //                }
                 
+                //let pparser = PlaylistParser()
+                
                 let durl = URL(fileURLWithPath: inputDirectoryName)
                 let playlists = await Playlist.readPlaylistDirectory(durl)
                 for playlist in playlists {
@@ -343,14 +352,16 @@ extension MainCommand {
                         if let inputFileURL = inputFileURL {
                             do {
                                 if FileManager.default.fileExists(atPath: inputFileURL.path) {
-                                    print("removing input file because it exists. \(inputFileURL.path)")
+                                    if commonOptions.verbose {
+                                        print("removing input file because it exists. \(inputFileURL.path)")
+                                    }
                                     try FileManager.default.removeItem(atPath: inputFileURL.path)
                                 }
                                 
                                 try FileManager.default.moveItem(atPath: outputFileURL.path,
                                                                  toPath: inputFileURL.path)
-                                print("moved to \(inputFileURL.path)")
-                                print("the file path has been copied to the pasteboard")
+                                print("Wrote to\n\(inputFileURL.path)")
+                                print("The file path has been copied to the pasteboard")
                                 
                                 pasteboard.setString(inputFileURL.path,
                                                      forType: NSPasteboard.PasteboardType.string)

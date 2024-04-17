@@ -1,0 +1,271 @@
+#compdef m3ufrob
+local context state state_descr line
+_m3ufrob_commandname=$words[1]
+typeset -A opt_args
+
+_m3ufrob() {
+    integer ret=1
+    local -a args
+    args+=(
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '--version[Display the current version.]'
+        '--prolix-help[Display the help document.]'
+        '--show-logging[Display the log entries for debugging.]'
+        '--reset-defaults[reset all stored preferences]'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+        '(-): :->command'
+        '(-)*:: :->arg'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+    case $state in
+        (command)
+            local subcommands
+            subcommands=(
+                'sort:This reads a playlist(s), then removes duplicates and sorts it.'
+                'merge:This merges playlists.'
+                'filter:This merges playlists.'
+                'html:This reads a playlist(s), then creates a simple HTML page.'
+                'check:This reads a playlist, then checks for dead links.'
+                'info:This reads a playlist, then displays info about it.'
+                'byhost:This reads a playlist(s), then extracts by hostname.'
+                'poll:This polls the service.'
+                'showWindow:Show a window'
+                'help:Show subcommand help information.'
+            )
+            _describe "subcommand" subcommands
+            ;;
+        (arg)
+            case ${words[1]} in
+                (sort)
+                    _m3ufrob_sort
+                    ;;
+                (merge)
+                    _m3ufrob_merge
+                    ;;
+                (filter)
+                    _m3ufrob_filter
+                    ;;
+                (html)
+                    _m3ufrob_html
+                    ;;
+                (check)
+                    _m3ufrob_check
+                    ;;
+                (info)
+                    _m3ufrob_info
+                    ;;
+                (byhost)
+                    _m3ufrob_byhost
+                    ;;
+                (poll)
+                    _m3ufrob_poll
+                    ;;
+                (showWindow)
+                    _m3ufrob_showWindow
+                    ;;
+                (help)
+                    _m3ufrob_help
+                    ;;
+            esac
+            ;;
+    esac
+
+    return ret
+}
+
+_m3ufrob_sort() {
+    integer ret=1
+    local -a args
+    args+=(
+        ':input-file:'
+        '(-o --output-file-name)'{-o,--output-file-name}'[Output file name.]:output-file-name:'
+        '--output-dir[Output directory.]:output-dir:'
+        '--input-directory-name[Input Directory.]:input-directory-name:'
+        '--inplace[In place]'
+        '--no-inplace[In place]'
+        '--basename[basename]'
+        '--no-basename[basename]'
+        '--sort-by-title[Choose field to sort on.]'
+        '--sort-by-url-string[Choose field to sort on.]'
+        '--sort-by-duration[Choose field to sort on.]'
+        '--ascending[Choose sort direction.]'
+        '--descending[Choose sort direction.]'
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+_m3ufrob_merge() {
+    integer ret=1
+    local -a args
+    args+=(
+        ':input-file-names:'
+        '(-o --output-file-name)'{-o,--output-file-name}'[Output file name.]:output-file-name:'
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+_m3ufrob_filter() {
+    integer ret=1
+    local -a args
+    args+=(
+        ':input-file-names:'
+        '(-o --output-file-name)'{-o,--output-file-name}'[Output file name.]:output-file-name:'
+        '(-s --search)'{-s,--search}'[Search term.]:search:'
+        '(-r --regexp)'{-r,--regexp}'[Regexp Search term.]:regexp:'
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+_m3ufrob_html() {
+    integer ret=1
+    local -a args
+    args+=(
+        ':input-file-ur-ls:'
+        '(-o --output-file-name)'{-o,--output-file-name}'[Output file name.]:output-file-name:'
+        '--input-directory-name[Input Directory.]:input-directory-name:'
+        '--basename[basename]'
+        '--no-basename[basename]'
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+_m3ufrob_check() {
+    integer ret=1
+    local -a args
+    args+=(
+        ':input-file:'
+        '--save[Save the output to a file.]'
+        '--output-dir[The output directory.]:output-dir:'
+        '(-o --output-file)'{-o,--output-file}'[The output file.]:output-file:'
+        '--show-good[Show good links]'
+        '--show-bad[Show bad links]'
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+_m3ufrob_info() {
+    integer ret=1
+    local -a args
+    args+=(
+        ':input-file:'
+        '--input-directory-name[Input Directory.]:input-directory-name:'
+        '--save[Save the output to a file.]'
+        '--output-dir[The output directory.]:output-dir:'
+        '(-o --output-file)'{-o,--output-file}'[The output file.]:output-file:'
+        '--sort-by-title[Choose field to sort on.]'
+        '--sort-by-url-string[Choose field to sort on.]'
+        '--sort-by-duration[Choose field to sort on.]'
+        '--ascending[Choose sort direction.]'
+        '--descending[Choose sort direction.]'
+        '--brief[Choose how to display playlist entries.]'
+        '--long[Choose how to display playlist entries.]'
+        '--detailed[Choose how to display playlist entries.]'
+        '--only-size[Choose how to display playlist entries.]'
+        '--only-title[Choose how to display playlist entries.]'
+        '--title-and-duration[Choose how to display playlist entries.]'
+        '--hosts[Choose how to display playlist entries.]'
+        '--directory[Choose how to display playlist entries.]'
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+_m3ufrob_byhost() {
+    integer ret=1
+    local -a args
+    args+=(
+        ':input-file:'
+        '(-o --output-file-name)'{-o,--output-file-name}'[Output file name.]:output-file-name:'
+        '--output-dir[Output directory.]:output-dir:'
+        '--selected-host[Host name.]:selected-host:'
+        '--input-directory-name[Input Directory.]:input-directory-name:'
+        '--list-hosts[List the hostnames in the input playlist]'
+        '--no-list-hosts[List the hostnames in the input playlist]'
+        '--basename[basename]'
+        '--no-basename[basename]'
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+_m3ufrob_poll() {
+    integer ret=1
+    local -a args
+    args+=(
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '(-i --interval)'{-i,--interval}'[Interval]:interval:'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+_m3ufrob_showWindow() {
+    integer ret=1
+    local -a args
+    args+=(
+        '(--verbose -v)'{--verbose,-v}'[Yakity yak.]'
+        '--voice[Voice.]:voice:'
+        '--version[Show the version.]'
+        '(-h --help)'{-h,--help}'[Show help information.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+_m3ufrob_help() {
+    integer ret=1
+    local -a args
+    args+=(
+        ':subcommands:'
+        '--version[Show the version.]'
+    )
+    _arguments -w -s -S $args[@] && ret=0
+
+    return ret
+}
+
+
+_custom_completion() {
+    local completions=("${(@f)$($*)}")
+    _describe '' completions
+}
+
+_m3ufrob

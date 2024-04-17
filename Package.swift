@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -9,7 +9,7 @@ let package = Package(
     platforms: [
         // big surly is 11.4
         // Ventura 13.2.1
-        .macOS(.v13)
+        .macOS(.v14) // Sonoma
     ],
     products: [
         .executable(
@@ -20,10 +20,10 @@ let package = Package(
 
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git",
-                 from: "1.1.0"),
+                 from: "1.3.0"),
 //                 from: "1.2.2"),
         .package(url: "https://github.com/genedelisa/GDTerminalColor.git", from: "0.1.43"),
-        .package(url: "https://github.com/apple/swift-format", from: "508.0.0")
+        .package(url: "https://github.com/apple/swift-format", from: "508.0.1")
 
         // local
         //.package(name: "GDTerminalColor",
@@ -56,8 +56,11 @@ let package = Package(
             ],
             linkerSettings: [
                 .unsafeFlags([
-                    "-Xlinker", "-sectcreate", "-Xlinker", "__TEXT", "-Xlinker", "__info_plist", "-Xlinker",
-                    "./SupportingFiles/m3ufrob/Info.plist",
+                    "-Xlinker", "-sectcreate", 
+                    "-Xlinker", "__TEXT",
+                    "-Xlinker", "__info_plist",
+                    "-Xlinker",
+                    "SupportingFiles/m3ufrob/Info.plist",
                 ]),
             ]),
 
@@ -67,13 +70,35 @@ let package = Package(
               "m3ufrob"
             ]
         )
-    ], // targets
-    swiftLanguageVersions: [.v5]
+    ] // targets
+    //,swiftLanguageVersions: [.v5]
 )
 
 
 #if swift(>=5.6)
 package.dependencies += [
-    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.2.0"),
+    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
 ]
 #endif
+
+for target in package.targets {
+  target.swiftSettings = target.swiftSettings ?? []
+  target.swiftSettings?.append(
+    .unsafeFlags([
+      "-enable-bare-slash-regex"
+    ])
+  )
+}
+//let swiftSettings: [SwiftSetting] = [
+//    // -enable-bare-slash-regex becomes
+//    .enableUpcomingFeature("BareSlashRegexLiterals")
+//    // -warn-concurrency becomes
+//    //.enableUpcomingFeature("StrictConcurrency"),
+//    //.unsafeFlags(["-enable-actor-data-race-checks"],
+//    //    .when(configuration: .debug)),
+//]
+//
+//for target in package.targets {
+//    target.swiftSettings = target.swiftSettings ?? []
+//    target.swiftSettings?.append(contentsOf: swiftSettings)
+//}

@@ -52,6 +52,8 @@ You can check the links in the playlist and indicates which are dead.
             SortCommand.self,
             MergeCommand.self,
             FilterCommand.self,
+            //TODO: what happened to this command?
+            //SearchCommand.self,
             HTMLCommand.self,
             CheckLinksCommand.self,
             InfoCommand.self,

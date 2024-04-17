@@ -61,16 +61,21 @@ extension MainCommand {
                         discussion:
                             String(localized: "The filename of the input playlist.",
                                    comment: "help discussion for arg")
-                    )
+                    ),
+                  completion: .file(extensions: ["m3u", "m3u8"])
         )
         var inputFile: String = ""
         
         @Option(
             name: [.long],
-            help: ArgumentHelp(
-                String(localized: "Input Directory.", comment: ""),
-                discussion:
-                    String(localized: "Frob all playlists in this directory..", comment: "")
+            help: 
+                ArgumentHelp(
+                    String(localized: "Input Directory.", 
+                           comment: ""),
+                    discussion:
+                        String(localized: "Frob all playlists in this directory..", 
+                               comment: "")
+                
             )
         )
         var inputDirectoryName: String = FileManager.default.currentDirectoryPath
@@ -123,7 +128,8 @@ extension MainCommand {
                 ArgumentHelp(
                     String(localized: "Choose field to sort on.", comment: ""),
                     discussion:
-                        String(localized: "The playlist entries are sorted by this.", comment: "")
+                        String(localized: "The playlist entries are sorted by this field.",
+                               comment: "")
                 )
         )
         var sortField: SortField = .sortByURLString
@@ -133,7 +139,7 @@ extension MainCommand {
                 ArgumentHelp(
                     String(localized: "Choose sort direction.", comment: ""),
                     discussion:
-                        String(localized: "The playlist entries are sorted by this.", comment: "")
+                        String(localized: "The playlist entries are sorted by this. Ascending or Descending", comment: "")
                 )
         )
         var sortOp: SortOp = .ascending
@@ -141,21 +147,13 @@ extension MainCommand {
         @Flag(exclusivity: .exclusive,
               help:
                 ArgumentHelp(
-                    String(localized: "Choose display.", comment: ""),
+                    String(localized: "Choose how to display playlist entries.", comment: ""),
                     discussion:
-                        String(localized: "The .", comment: "")
+                        String(localized: "The playlist's entries are display in a variety of ways .",
+                               comment: "")
                 )
         )
         var displayOp: DisplayOp = .long
-        
-        //        @Flag(
-        //            help: ArgumentHelp(
-        //                String(localized: "Display .", comment: ""),
-        //                discussion:
-        //                    String(localized: "This will ", comment: "")
-        //            )
-        //        )
-        //        var size = false
         
         @OptionGroup() var commonOptions: Options
         

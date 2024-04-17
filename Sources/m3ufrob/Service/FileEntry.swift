@@ -58,7 +58,7 @@ public final class FileEntry: Identifiable, ObservableObject {
         do {
             let contentsOfFile = try String(contentsOfFile: fileURL.path, encoding: .utf8)
             let lines = contentsOfFile.components(separatedBy: .newlines)
-            self.playlistEntries = Playlist.parse(lines)
+            self.playlistEntries = Playlist.parser.parse(lines)
 
             // TODO: don't need parse in this struct
 //            self.playlistEntries = parse(array: lines)

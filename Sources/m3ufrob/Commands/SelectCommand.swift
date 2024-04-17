@@ -28,16 +28,30 @@ import GDTerminalColor
 import AppKit
 
 
+//TODO: implemant this!
+
 extension MainCommand {
     
-    struct FilterCommand:  AsyncParsableCommand {
+    struct SelectCommand:  AsyncParsableCommand {
         static let version = "0.1.0"
         
         static var configuration = CommandConfiguration(
-            commandName: "filter",
+            commandName: "select",
             abstract:
-                String(localized: "This merges playlists.", comment: ""),
+                String(localized: "This displays the url given a title.", comment: ""),
             usage: """
+              return the url (default)
+              m3ufrob select --search-title searchterm  playlist
+              
+              m3ufrob select --search-title searchterm  --return-url playlist
+              m3ufrob select --search-title searchterm  --return-title playlist
+              m3ufrob select --search-title searchterm  --return-both playlist
+              
+              m3ufrob select --search-image searchterm  --return-image-url playlist
+              
+              
+              
+              
               Playlist containing the word thing with whitespace both before and after the word.
               xcrun swift run m3ufrob filter --regexp '\\s+thing\\s+' playlist1 playlist2
               m3ufrob filter --regexp '\\s+thing\\s+' playlist1 playlist2
