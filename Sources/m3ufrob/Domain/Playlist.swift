@@ -25,6 +25,12 @@ import os.log
 import GDTerminalColor
 import RegexBuilder
 
+//: NSObject, NSCopying {
+//func copy(with zone: NSZone? = nil) -> Any {
+//    let copy = Playlist(entries: this.playlistEntries)
+//    return copy
+//}
+
 public class Playlist: Identifiable, ObservableObject {
     //let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Playlist")
     
@@ -71,11 +77,12 @@ public class Playlist: Identifiable, ObservableObject {
         self.fileURL = URL(filePath: filePath)
     }
 
-    public init(entries: [PlaylistEntry]) {
+    public init(entries: [PlaylistEntry], sortedEntries: [PlaylistEntry] = []) {
         self.playlistEntries = entries
-
+        self.sortedEntries = sortedEntries
+        
         // TODO: what about this?
-        self.fileURL = URL(filePath: ".")
+        // self.fileURL = URL(filePath: ".")
     }
 
     func foo() {
@@ -242,6 +249,8 @@ public class Playlist: Identifiable, ObservableObject {
             playlistEntries.append(contentsOf: playlist.playlistEntries)
         }
         let output = Playlist(entries: playlistEntries)
+
+        // this will also sort
         output.removeDuplicates()
         return output
     }
@@ -1046,19 +1055,13 @@ public class Playlist: Identifiable, ObservableObject {
             //            }
         }
     }
+    
 
-    func removeDuplicates(sortField: SortField = .sortByURLString, sortOp: SortOp = .ascending) {
-        // unlike Unix uniq, it doesn't have to be sorted first
-        //        self.playlistEntries.sort { a, b in
-        //            a.urlString < b.urlString
-        //        }
+    func sortEntries(entries: [PlaylistEntry],
+                     sortField: SortField = .sortByURLString,
+                     sortOp: SortOp = .ascending) {
 
-        let unique = Array<PlaylistEntry>(Set<PlaylistEntry>(self.playlistEntries))
-//        unique.sort(using: .localizedStandard)
-//        self.sortedEntries = unique
-        
        // print("removeDuplicates \(sortField)")
-        
        // print("\(#function)".bg(.yellow).fg(.red) )
         
         switch sortField {
@@ -1067,20 +1070,20 @@ public class Playlist: Identifiable, ObservableObject {
            // print("sorting by urlstring")
             // want to take care of numbers. i.e. 10 does not come before 2
             
-            self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
+            self.sortedEntries = entries.sorted {(s1, s2) -> Bool in
                 if sortOp == .ascending {
                     Logger.domain.debug("Sorting ascending by urlString")
-                    return (s1.urlString.localizedStandardCompare(s2.title) == .orderedAscending)
+                    return (s1.urlString.localizedStandardCompare(s2.urlString) == .orderedAscending)
                 } else {
                     Logger.domain.debug("Sorting descending by urlString")
-                    return (s1.urlString.localizedStandardCompare(s2.title) == .orderedDescending)
+                    return (s1.urlString.localizedStandardCompare(s2.urlString) == .orderedDescending)
                 }
 
             }
         case .sortByTitle:
            // print("sorting by title")
             
-            self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
+            self.sortedEntries = entries.sorted {(s1, s2) -> Bool in
                 if sortOp == .ascending {
                     Logger.domain.debug("Sorting ascending by title")
                     return (s1.title.localizedStandardCompare(s2.title) == .orderedAscending)
@@ -1092,7 +1095,7 @@ public class Playlist: Identifiable, ObservableObject {
         case .sortByDuration:
            // print("sorting by duration")
             
-            self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
+            self.sortedEntries = entries.sorted {(s1, s2) -> Bool in
 
                 if sortOp == .ascending {
                     Logger.domain.debug("Sorting ascending by duration")
@@ -1109,6 +1112,75 @@ public class Playlist: Identifiable, ObservableObject {
             
            // print("self.sortedEntries\(self.sortedEntries)")
         }
+    }
+    
+    func removeDuplicates(sortField: SortField = .sortByURLString, sortOp: SortOp = .ascending) {
+        // unlike Unix uniq, it doesn't have to be sorted first
+        //        self.playlistEntries.sort { a, b in
+        //            a.urlString < b.urlString
+        //        }
+
+        let unique = Array<PlaylistEntry>(Set<PlaylistEntry>(self.playlistEntries))
+        
+        sortEntries(entries: unique, sortField: sortField, sortOp: sortOp)
+        
+        
+        
+//        unique.sort(using: .localizedStandard)
+//        self.sortedEntries = unique
+        
+       // print("removeDuplicates \(sortField)")
+        
+       // print("\(#function)".bg(.yellow).fg(.red) )
+        
+//        switch sortField {
+//            
+//        case .sortByURLString:
+//           // print("sorting by urlstring")
+//            // want to take care of numbers. i.e. 10 does not come before 2
+//            
+//            self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
+//                if sortOp == .ascending {
+//                    Logger.domain.debug("Sorting ascending by urlString")
+//                    return (s1.urlString.localizedStandardCompare(s2.title) == .orderedAscending)
+//                } else {
+//                    Logger.domain.debug("Sorting descending by urlString")
+//                    return (s1.urlString.localizedStandardCompare(s2.title) == .orderedDescending)
+//                }
+//
+//            }
+//        case .sortByTitle:
+//           // print("sorting by title")
+//            
+//            self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
+//                if sortOp == .ascending {
+//                    Logger.domain.debug("Sorting ascending by title")
+//                    return (s1.title.localizedStandardCompare(s2.title) == .orderedAscending)
+//                } else {
+//                    Logger.domain.debug("Sorting descending by title")
+//                    return (s1.title.localizedStandardCompare(s2.title) == .orderedDescending)
+//                }
+//            }
+//        case .sortByDuration:
+//           // print("sorting by duration")
+//            
+//            self.sortedEntries = unique.sorted {(s1, s2) -> Bool in
+//
+//                if sortOp == .ascending {
+//                    Logger.domain.debug("Sorting ascending by duration")
+//                    Logger.domain.debug("\(s1.duration) < \(s2.duration)")
+//                    //print("|\(s1.duration)| < |\(s2.duration)| \(s1.duration <= s2.duration)")
+//                    return s1.duration <= s2.duration
+//                } else {
+//                    Logger.domain.debug("Sorting descending by duration")
+//                    Logger.domain.debug("\(s1.duration) > \(s2.duration)")
+//                    //print("|\(s1.duration)| > |\(s2.duration)|  \(s1.duration > s2.duration)")
+//                    return s1.duration > s2.duration
+//                }
+//            }
+//            
+//           // print("self.sortedEntries\(self.sortedEntries)")
+//        }
         
        
 

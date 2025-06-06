@@ -36,7 +36,7 @@ extension MainCommand {
         static var configuration = CommandConfiguration(
             commandName: "filter",
             abstract:
-                String(localized: "This merges playlists.", comment: ""),
+                String(localized: "This filters playlists.", comment: ""),
             usage: """
               Playlist containing the word thing with whitespace both before and after the word.
               xcrun swift run m3ufrob filter --regexp '\\s+thing\\s+' playlist1 playlist2
@@ -103,6 +103,17 @@ extension MainCommand {
                 )
         )
         public var remove: Bool = false
+
+        @Flag(
+            name: [.long],
+            help:
+                ArgumentHelp(
+                    String(localized: "color", comment: ""),
+                    discussion:
+                        String(localized: "Display ANSI colors in output", comment: "")
+                )
+        )
+        public var color: Bool = false
         
         
         @OptionGroup() var commonOptions: Options
@@ -151,6 +162,7 @@ extension MainCommand {
                 }
                 
                 var merged = await Playlist.mergePlaylists(playlists: playlists)
+                
                 if commonOptions.verbose {
                     print("merged count: \(merged.playlistEntries.count)")
                     print("There are \(merged.playlistEntries.count) entries.")
@@ -165,12 +177,12 @@ extension MainCommand {
                 
                 var filtered = [PlaylistEntry]()
                 
-                var filteredPlaylist: Playlist
-                if remove {
-                    filteredPlaylist = merged
-                } else {
-                    filteredPlaylist = Playlist(entries: filtered)
-                }
+//                var filteredPlaylist: Playlist
+//                if remove {
+//                    filteredPlaylist = Playlist(entries: merged.playlistEntries, sortedEntries: merged.sortedEntries)
+//                } else {
+//                    filteredPlaylist = Playlist(entries: filtered)
+//                }
                 
                 if let search {
                     for entry in merged.sortedEntries {
@@ -188,12 +200,17 @@ extension MainCommand {
                     do {
                         let re = try Regex(regexp)
                             .ignoresCase(true)
+                        
                         for entry in merged.sortedEntries {
+                            
                             if entry.title.contains(re) {
                                 if remove {
                                     if let index = merged.sortedEntries.firstIndex(of: entry) {
                                         merged.sortedEntries.remove(at: index)
-                                        print("removed \(index) count is now \(filtered)")
+                                        if commonOptions.verbose {
+                                            print("removed \(index) count is now \(merged.sortedEntries.count)")
+                                            print("entry removed \(entry.title)")
+                                        }
                                     }
                                 } else {
                                     filtered.append(entry)
@@ -206,27 +223,17 @@ extension MainCommand {
                     }
                 }
                 
-                
+                var filteredPlaylist: Playlist
+                if remove {
+                    filteredPlaylist = Playlist(entries: merged.sortedEntries,
+                                                sortedEntries: merged.sortedEntries)
+                } else {
+                    filteredPlaylist = Playlist(entries: filtered)
+                }
+
                 //let filteredPlaylist = Playlist(entries: filtered)
                 filteredPlaylist.removeDuplicates()
                 
-                // what is directory name now?
-                //                if basename {
-                //                    let bname = directoryURL.deletingPathExtension().lastPathComponent
-                //                    let ext = directoryURL.pathExtension
-                //                    let parent = directoryURL.deletingLastPathComponent()
-                //                    let ppath = parent.path(percentEncoded: false)
-                //                    // ppath has a trailing /
-                //                    var outputFileURL = URL(fileURLWithPath: ppath)
-                //                    outputFileURL = outputFileURL.appending(path: "\(bname).su.\(ext)")
-                //                    outputFileURL.resolveSymlinksInPath()
-                //                    // for dealing with relative paths
-                //                    outputFileURL.standardize()
-                //
-                //                    //playlist.displayPlaylist(outputFileURL.path)
-                //                    print("\(outputFileURL.path)".fg(.orange))
-                //                    await Playlist.save(filePath: outputFileURL.path, playlist: merged)
-                //                }
                 
                 if let outputFileName {
                     await Playlist.save(filePath: outputFileName, playlist: filteredPlaylist)
@@ -236,7 +243,7 @@ extension MainCommand {
                         print("Saved to: \(outputFileName)".fg(.yellow))
                     }
                 } else {
-                    Terminal.shared.display(playlist: filteredPlaylist)
+                    Terminal.shared.display(playlist: filteredPlaylist, color: color)
                 }
                 
             }

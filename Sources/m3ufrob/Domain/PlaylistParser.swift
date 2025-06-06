@@ -47,6 +47,7 @@ struct PlaylistParser {
     }
     
     func parse(_ lines: [String]) -> [PlaylistEntry] {
+//    func c -> [PlaylistEntry] {
         Logger.playlist.trace("\(#function)")
         
         enum ParseState {
@@ -89,23 +90,24 @@ struct PlaylistParser {
                     parseState = .hasExtInf
                     
                 }
-//                else if line.hasPrefix("#EXTIMG") {
-//                    Logger.playlist.debug("EXTIMG: \(line, privacy: .public)")
-//                    
-//                    //                    let imgURLString = line.replacingOccurrences(of: extImgRegexp,
-//                    //                                                                 with: "$2",
-//                    //                                                                 options: .regularExpression,
-//                    //                                                                 range: nil)
-//                    //                    //print("imgURLString: \(imgURLString)")
-//                    entry.extImgURLString = imgURLString
-//                    
-//                    
-//                    // keep going
-//                    parseState = .hasExtInf
-//
-//                }
+                //                else if line.hasPrefix("#EXTIMG") {
+                //                    Logger.playlist.debug("EXTIMG: \(line, privacy: .public)")
+                //
+                //                    //                    let imgURLString = line.replacingOccurrences(of: extImgRegexp,
+                //                    //                                                                 with: "$2",
+                //                    //                                                                 options: .regularExpression,
+                //                    //                                                                 range: nil)
+                //                    //                    //print("imgURLString: \(imgURLString)")
+                //                    entry.extImgURLString = imgURLString
+                //
+                //
+                //                    // keep going
+                //                    parseState = .hasExtInf
+                //
+                //                }
                 
                 else if line.hasPrefix("#EXTINF") {
+                    
                     do {
                         let tup = try parseCmdLine(line)
                         Logger.playlist.debug("cmd: \(tup.cmd, privacy: .public)")
@@ -118,6 +120,16 @@ struct PlaylistParser {
                         entry.commmands[tup.cmd] = "\(tup.dur),\(tup.title)"
                         
                         parseState = .hasExtInf
+                        
+                        
+                    } catch PlaylistError.badInput {
+                        print("Bad Input Error with #EXTINF line:\n\(line)") //\(PlaylistError.badInput.localizedDescription)")
+                        entry.originalExtinf = "#EXTINF:0,Unknown"
+                        entry.title = "badInput"
+                        entry.duration = 0
+                        entry.commmands["#EXTINF:"] = "0,\(entry.urlString)"
+                        parseState = .hasExtInf
+
                     } catch {
                         print("\(error.localizedDescription)")
                     }
@@ -150,9 +162,15 @@ struct PlaylistParser {
             else if line.hasPrefix("http") {
                 // doesn't have prefix #EXT i.e. the url
                 Logger.playlist.debug("non #EXT line: \(line, privacy: .public)")
-               // print("non #EXT line: \(line)")
+                // print("non #EXT line: \(line)")
                 
                 entry.urlString = line
+                if entry.title == "badInput" {
+                    let url = URL(string: entry.urlString)!
+                    entry.title = "\(url.lastPathComponent)"
+                    //x "\(entry.urlString)"
+                }
+
                 results.append(entry)
                 
                 // reset

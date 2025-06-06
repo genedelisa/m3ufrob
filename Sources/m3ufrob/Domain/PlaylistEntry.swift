@@ -51,6 +51,12 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
     }
     public override init() {
         super.init()
+        self.title = "unknown"
+        self.duration = 0
+        self.originalExtinf = "#EXTINF:0,unknown"
+        // origianally I wanted to display only if the command was set
+        // but for extinf, I want a default
+        self.commmands=["#EXTINF:": "#EXTINF:0,no title" ]
     }
     
     required public init(from: Decoder) {

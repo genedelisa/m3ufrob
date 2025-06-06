@@ -26,6 +26,7 @@ import Foundation
 import ArgumentParser
 import GDTerminalColor
 import AppKit
+import os.log
 
 enum SortField: String, EnumerableFlag, Codable {
     case sortByTitle
@@ -154,6 +155,19 @@ extension MainCommand {
         public var inplace: Bool = false
         
         @Flag(
+            name: [.long],
+            inversion: .prefixedNo,
+            //exclusivity: .exclusive,
+            help:
+                ArgumentHelp(
+                    String(localized: "Unique", comment: ""),
+                    discussion:
+                        String(localized: "Remove duplicate entries", comment: "")
+                )
+        )
+        public var unique: Bool = false
+        
+        @Flag(
             //name: [.short],
             inversion: .prefixedNo,
             exclusivity: .exclusive,
@@ -224,6 +238,9 @@ extension MainCommand {
             
             if let inputDirectoryName {
                 
+                Logger.command.debug("inputDirectoryName branch")
+
+                
                 //                let message = String.localizedStringWithFormat(
                 //                    NSLocalizedString("Hello, %@! Welcome to %@!",
                 //                                      tableName: "AppDelegate",
@@ -283,16 +300,36 @@ extension MainCommand {
                 var inputFileURL: URL?
                 
                 if let inputFile {
+                    Logger.command.debug("not inputDirectoryName branch")
+                    Logger.command.debug("Processing file \(inputFile)")
                     //print("Processing file \(inputFile)".fg(.yellow))
                     
                     playlist = Playlist()
                     
                     if inputFile == "-" {
+                        Logger.command.debug("reading from stdin")
+
                         if commonOptions.verbose {
                             print("reading from stdin")
                         }
                         await playlist.loadFromStdin()
-                        playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
+
+                        // TODO: unique
+                        if unique {
+                            Logger.command.debug("unique")
+
+                            let unique = Array<PlaylistEntry>(Set<PlaylistEntry>(playlist.playlistEntries))
+                            playlist.sortEntries(entries: unique,
+                                                 sortField: self.sortField,
+                                                 sortOp: self.sortOp)
+                        } else {
+                            Logger.command.debug("not unique")
+                            playlist.sortEntries(entries: playlist.playlistEntries,
+                                                 sortField: self.sortField,
+                                                 sortOp: self.sortOp)
+                        }
+                        
+//                        playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
 
                         
                         //inputFile = stdin.pointee
@@ -302,7 +339,7 @@ extension MainCommand {
 //                        }
 
                     } else {
-                        
+                        Logger.command.debug("reading inputfile \(inputFile)")
                         inputFileURL = URL(fileURLWithPath: inputFile)
                         if var url = inputFileURL {
                             url.resolveSymlinksInPath()
@@ -318,7 +355,30 @@ extension MainCommand {
                             
                             playlist = Playlist(fileURL: url)
                             await playlist.load()
-                            playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
+                            
+                            for entry in playlist.playlistEntries {
+                                print("\(entry)")
+
+//                                if entry.title == "badInput" {
+//                                    print("entry has bad input")
+//                                } else {
+//                                    print("\(entry)")
+//                                }
+                            }
+                            
+                            if unique {
+                                Logger.command.debug("unique")
+                                let unique = Array<PlaylistEntry>(Set<PlaylistEntry>(playlist.playlistEntries))
+                                playlist.sortEntries(entries: unique,
+                                                     sortField: self.sortField,
+                                                     sortOp: self.sortOp)
+                            } else {
+                                Logger.command.debug("not unique")
+                                playlist.sortEntries(entries: playlist.playlistEntries,
+                                                     sortField: self.sortField,
+                                                     sortOp: self.sortOp)
+                            }
+                            //playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
 
                         }
                     }
@@ -328,9 +388,12 @@ extension MainCommand {
                         print(playlist)
                     }
                     
+                   
+                    
                    // playlist.removeDuplicates(sortField: self.sortField, sortOp: self.sortOp)
                     
                     if inplace {
+                        Logger.command.debug("inplace")
                         if commonOptions.verbose {
                             print("sorting inplace\n")
                         }
@@ -375,6 +438,7 @@ extension MainCommand {
                     }
                     
                     else if basename {
+                        Logger.command.debug("using basename")
                         if commonOptions.verbose {
                             print("basename\n")
                         }

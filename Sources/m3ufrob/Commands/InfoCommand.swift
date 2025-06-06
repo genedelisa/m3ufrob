@@ -31,6 +31,7 @@ enum DisplayOp: String, EnumerableFlag, Codable {
     case detailed
     case onlySize
     case onlyTitle
+    case onlyURL
     case titleAndDuration
     case hosts
     case directory
@@ -39,16 +40,29 @@ enum DisplayOp: String, EnumerableFlag, Codable {
 extension MainCommand {
     
     struct InfoCommand:  AsyncParsableCommand {
-        static let version = "0.1.0"
+        static let version = "0.1.1"
         
         static var configuration = CommandConfiguration(
             commandName: "info",
             abstract: String(localized: """
-            This reads a playlist, then displays info about it.
+            This reads a m3u8 playlist, then displays info about it.
             """,
                              comment: "Help abstract"),
             usage: String(localized: """
               xcrun swift run m3ufrob info filename
+              m3ufrob info --only-title filename
+              m3ufrob info --only-url filename
+              m3ufrob info --only-size filename
+              m3ufrob info --brief filename
+              m3ufrob info --long filename
+              m3ufrob info --detailed filename
+              m3ufrob info --hosts filename
+              m3ufrob info --title-and-duration filename
+            
+              sort works with the above flags too
+              m3ufrob info --title-and-duration --sort-by-duration filename
+              m3ufrob info --title-and-duration --sort-by-url-string filename
+              m3ufrob info --title-and-duration --sort-by-title filename
             """,
                           comment: "Help Usage"),
             version: version
@@ -207,6 +221,8 @@ extension MainCommand {
                 displaySize(playlist)
             case .onlyTitle:
                 displayTitle(playlist)
+            case .onlyURL:
+                displayURL(playlist)
             case .hosts:
                 displayHosts(playlist)
             case .titleAndDuration:
@@ -420,6 +436,13 @@ extension MainCommand {
             for entry in playlist.sortedEntries {
                 let title = entry.title
                 print("\(title)".fg(.orange))
+            }
+        }
+        
+        func displayURL(_ playlist: Playlist) {
+            for entry in playlist.sortedEntries {
+                let urlString = entry.urlString
+                print("\(urlString)".fg(.orange))
             }
         }
         

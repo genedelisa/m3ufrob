@@ -31,15 +31,15 @@ struct Terminal {
     var urlFg: XTColorNameString = .darkMagenta
     var urlBg: XTColorNameString = .seaGreen1
     
-    func display(playlist: Playlist, path: String = "", comments: Bool = false) {
+    func display(playlist: Playlist, path: String = "", comments: Bool = false, color: Bool = true) {
         if playlist.sortedEntries.count > 0 {
-            display(entries: playlist.sortedEntries, path: path)
+            display(entries: playlist.sortedEntries, path: path, color:color)
         } else {
             display(entries: playlist.playlistEntries, path:path)
         }
     }
     
-    func display(entries: [PlaylistEntry], path: String = "", comments: Bool = false) {
+    func display(entries: [PlaylistEntry], path: String = "", comments: Bool = false, color: Bool = true) {
         
 //        var s = "#EXTM3U\n"
         var s = ""
@@ -57,19 +57,37 @@ struct Terminal {
             
             for (k,v) in f.commmands {
                 if k == "#EXTINF:" {
-                    s += f.extInf
-                        .fg256(.yellow).bg256(.darkOrange)
+                    
+//                    if f.title == "badInput" {
+//                        
+//                    }
+                    
+                    if color {
+                        s += f.extInf
+                            .fg256(.yellow).bg256(.darkOrange)
+                    } else {
+                        s += f.extInf
+                    }
+                    
                     s += "\n"
                 } else {
-                    s += "\(k) "
-                        .fg256(.yellow).bg256(.darkViolet)
-                    s += "\(v)\n"
-                        .fg256(.red).bg256(.darkBlue )
+                    if color {
+                        s += "\(k) "
+                            .fg256(.yellow).bg256(.darkViolet)
+                        s += "\(v)\n"
+                            .fg256(.red).bg256(.darkBlue )
+                    } else {
+                        s += "\(k) "
+                        s += "\(v)\n"
+                    }
                 }
             }
-            
-            s += "\(f.urlString)"
-                .fg256(urlFg).bg256(urlBg)
+            if color {
+                s += "\(f.urlString)"
+                    .fg256(urlFg).bg256(urlBg)
+            } else {
+                s += "\(f.urlString)"
+            }
             
             s += "\n\n"
         }
