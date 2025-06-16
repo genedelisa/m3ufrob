@@ -180,7 +180,7 @@ extension MainCommand {
             name: [.long],
             help: ArgumentHelp(
                 String(
-                    localized: "The highest duration.",
+                    localized: "The highest duration in seconds.",
                     comment: ""),
                 discussion:
                     String(
@@ -194,7 +194,7 @@ extension MainCommand {
             name: [.long],
             help: ArgumentHelp(
                 String(
-                    localized: "The lowest duration.",
+                    localized: "The lowest duration in seconds.",
                     comment: ""),
                 discussion:
                     String(
@@ -450,7 +450,8 @@ extension MainCommand {
                 }
                 str += "\(d.formatted())\t".fg(.orange)
                 str += "\(title) ".fg(.yellow)
-                str += "\(url)".fg(.blue)
+                //str += "\(url)".fg(.blue)
+                str += "\(url)".fg(.aqua)
 
                 print(str)
             }
