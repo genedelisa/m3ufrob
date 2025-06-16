@@ -63,6 +63,11 @@ extension MainCommand {
               m3ufrob info --title-and-duration --sort-by-duration filename
               m3ufrob info --title-and-duration --sort-by-url-string filename
               m3ufrob info --title-and-duration --sort-by-title filename
+            
+              Filter by duration (sorting just to see the results)
+              m3ufrob info --detailed --sort-by-duration --highest-duration 500 filename
+              m3ufrob info --detailed --sort-by-duration --lowest-duration 120 filename
+              m3ufrob info --detailed --sort-by-duration --lowest-duration 120 --highest-duration 500   filename         
             """,
                           comment: "Help Usage"),
             version: version
@@ -168,6 +173,36 @@ extension MainCommand {
                 )
         )
         var displayOp: DisplayOp = .long
+        
+        
+        
+        @Option(
+            name: [.long],
+            help: ArgumentHelp(
+                String(
+                    localized: "The highest duration.",
+                    comment: ""),
+                discussion:
+                    String(
+                        localized: "No files longer than this",
+                        comment: "")
+            )
+        )
+        var highestDuration: Double = .infinity
+        
+        @Option(
+            name: [.long],
+            help: ArgumentHelp(
+                String(
+                    localized: "The lowest duration.",
+                    comment: ""),
+                discussion:
+                    String(
+                        localized: "No files shorter than this",
+                        comment: "")
+            )
+        )
+        var lowestDuration: Double = .zero
         
         @OptionGroup() var commonOptions: Options
         
@@ -370,11 +405,36 @@ extension MainCommand {
 //            nf.numberStyle = .none
 //            nf.minimumIntegerDigits = 3
             
+            var header=""
+            if displayIndex {
+                header += "Index\t"
+            }
+            if displaySeconds {
+                header += "Seconds\t"
+            }
+            header += "Duration\t"
+            header += "Title\t"
+            header += "URL"
+            print(header.fg(.yellow))
+            
             for entry in playlist.sortedEntries {
                 index += 1
                 let url = URL(string: entry.urlString)!
                 let title = entry.title
                 let duration = entry.duration
+                
+                if !(duration >= lowestDuration)  {
+                    if commonOptions.verbose {
+                        print("\(duration) not >= \(lowestDuration)")
+                    }
+                    continue
+                }
+                if !(duration <= highestDuration) {
+                    if commonOptions.verbose {
+                        print("\(duration) not <= \(highestDuration)")
+                    }
+                    continue
+                }
                 
                 // https://github.com/apple/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md
                 let d: Duration = .seconds(duration)
@@ -389,7 +449,8 @@ extension MainCommand {
                     str += "\(duration.formatted(.number.precision(.fractionLength(3))))\t".fg(.dodgerBlue)
                 }
                 str += "\(d.formatted())\t".fg(.orange)
-                str += "\(title)".fg(.yellow)
+                str += "\(title) ".fg(.yellow)
+                str += "\(url)".fg(.blue)
 
                 print(str)
             }

@@ -164,7 +164,7 @@ extension MainCommand {
                     }
                 }
                 
-                var merged = await Playlist.mergePlaylists(playlists: playlists)
+                let merged = await Playlist.mergePlaylists(playlists: playlists)
                 if commonOptions.verbose {
                     print("merged count: \(merged.playlistEntries.count)")
                     print("There are \(merged.playlistEntries.count) entries.")

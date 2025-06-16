@@ -82,7 +82,7 @@ struct FileTags {
         
         //        for n in new { sharedStorage.addTag(n) }
         //
-        var removedFromStorage = [String]()
+        let removedFromStorage = [String]()
         //        for r in removed {
         //            if sharedStorage.removeTag(r) {
         //                removedFromStorage.append(r)
@@ -131,7 +131,7 @@ struct FileTags {
     public mutating func removeTag(_ url: URL, name: String) {
         guard tagNames.contains(name) else { return }
         
-        if let i = tagNames.index(of: name) {
+        if let i = tagNames.firstIndex(of: name) {
             tagNames.remove(at: i)
         }
         

@@ -193,8 +193,10 @@ struct PlaylistParser {
     func parseCmdLine(_ line: String) throws -> (cmd: String, dur:Double, title: String) {
         
         let regexp =
-        /(?<cmd>#EXTINF:)?(?<dur>[+-]?[[:space:][:digit:]\.]*)\s*,\s*(?<title>.*)/
-        
+        /(?<cmd>#EXTINF:)?[:space:]*(?<dur>[+-]?[[:space:][:digit:]\.]*)\s*,\s*(?<title>.*)/
+
+        //        /(?<cmd>#EXTINF:)?(?<dur>[+-]?[[:space:][:digit:]\.]*)\s*,\s*(?<title>.*)/
+
         if line.contains("EXTINF") {
             do {
                 

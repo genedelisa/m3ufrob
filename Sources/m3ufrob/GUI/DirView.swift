@@ -40,6 +40,23 @@ struct DirView: View {
     
     @State private var isPerformingTask = false
     
+//    let imageTask = Task { () -> Image? in
+//        let imageURL = URL(string: "https://source.unsplash.com/random")!
+//
+//        // Check for cancellation before the network request.
+//        try Task.checkCancellation()
+//        print("Starting network request...")
+//        let (imageData, _) = try await URLSession.shared.data(from: imageURL)
+//
+//        // Check for cancellation after the network request
+//        // to prevent starting our heavy image operations.
+//        try Task.checkCancellation()
+//
+//        let uiimage = UIImage(imageData)
+//        let image = Image(uiimage)
+//        // Perform image operations since the task is not cancelled.
+//        return image
+//    }
     let imageTask = Task { () -> NSImage? in
         let imageURL = URL(string: "https://source.unsplash.com/random")!
 
@@ -210,10 +227,17 @@ struct DirView: View {
             
             
         }
-        .onChange(of: self.url) { newUrl in
-            print("on change \(newUrl)")
+        .onChange(of: self.url, initial: true) { oldUrl, newUrl in
+            print("self.url on change \(newUrl)")
             self.refresh()
         }
+
+
+
+//        .onChange(of: self.url) { newUrl in
+//            print("on change \(newUrl)")
+//            self.refresh()
+//        }
         
     }
     

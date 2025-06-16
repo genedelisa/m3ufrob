@@ -333,7 +333,7 @@ class FileService: FileServiceProtocol, ObservableObject {
         let item = NSMetadataItem(url: url)
         
 //        if let item,
-//           let attributes = item.values(forAttributes: item.attributes) {
+//           let attributes = item.values(forAttrœibutes: item.attributes) {
 //            
 //            print("\(url)")
 //            print("\(item)")

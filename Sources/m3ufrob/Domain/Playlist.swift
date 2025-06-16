@@ -96,20 +96,20 @@ public class Playlist: Identifiable, ObservableObject {
 //        self.fileURL.setResourceValues(values)
         
         
-        let resourceKeys: [URLResourceKey] = [
-            .tagNamesKey
-        ]
-        var resourceValues: URLResourceValues
-        do {
-            if let fileURL {
-                resourceValues = try fileURL.resourceValues(forKeys: Set(resourceKeys))
-                if let tagNames = resourceValues.tagNames {
-                    //                tagNames
-                }
-            }
-        } catch let error {
-            debugPrint("error: \(error.localizedDescription)")
-        }
+//        let resourceKeys: [URLResourceKey] = [
+//            .tagNamesKey
+//        ]
+//        var resourceValues: URLResourceValues
+//        do {
+//            if let fileURL {
+//                resourceValues = try fileURL.resourceValues(forKeys: Set(resourceKeys))
+//                //if let tagNames = resourceValues.tagNames {
+//                    //                tagNames
+//                //}
+//            }
+//        } catch let error {
+//            debugPrint("error: \(error.localizedDescription)")
+//        }
         
         
         
@@ -740,9 +740,7 @@ public class Playlist: Identifiable, ObservableObject {
 //        let extinfoRegexp = #"^(#EXTINF:+)[\s]*(-?\d+),+([[:alnum:] ()-\.]*)"#
 
         //let extinfoRegexp = #"#([^:]*)\s*:(-?\d*\.\d+),\s*(.*[^ ])"#
-        let extinfoRegexp = #"(#EXTINF):\s*-?(\d*\.?\d+),(.*)"#
-
-        
+        //let extinfoRegexp = #"(#EXTINF):\s*-?(\d*\.?\d+),(.*)"#
         // there is also this:
         // #EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Mezzo_Logo.svg/1280px-Mezzo_Logo.svg.png" group-title="Music",Mezzo
 
