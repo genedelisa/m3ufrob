@@ -57,7 +57,10 @@ extension MainCommand {
               m3ufrob filter --pattern-or --pattern foo --pattern bar file
               Logical Or the patterns
               m3ufrob filter --pattern foo --pattern bar file
-              
+
+              Logical And the patterns
+              m3ufrob filter --pattern-and --pattern foo --pattern bar file
+
               """,
             version: version
         )
@@ -131,6 +134,17 @@ extension MainCommand {
                 )
         )
         public var patternOr: Bool = false
+        
+        @Flag(
+            name: [.long],
+            help:
+                ArgumentHelp(
+                    String(localized: "patternAnd", comment: ""),
+                    discussion:
+                        String(localized: "Used with --pattern. Logical and the patterns instead of concatenation", comment: "")
+                )
+        )
+        public var patternAnd: Bool = false
         
 
         @Flag(
@@ -274,6 +288,8 @@ extension MainCommand {
                         // to or the patterns
                         thePattern = pattern.map { "(\($0))" }.joined(separator: "|")
                         //print("combinedOrPattern \(thePattern)")
+                    } else if patternAnd {
+                        thePattern = pattern.map { "(\($0))" }.joined(separator: "&")
                     } else {
                         // Combine patterns by concatenation.
                         thePattern = pattern.joined()

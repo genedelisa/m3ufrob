@@ -34,6 +34,8 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
     public var urlString: String = ""
     public var extImgURLString: String = ""
     public var originalExtinf: String = ""
+    public var properties: [String: String] = [:]
+
     
     var extInf: String {
         return "#EXTINF:\(duration),\(title)"
@@ -42,11 +44,22 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
     // all the lines starting with #
     public var commmands : [String: String] = [:]
     
-    public init(title: String, duration: Double, urlString: String, imgUrlString: String) {
+    public init(title: String, duration: Double, urlString: String, imgUrlString: String, properties: [String: String]?) {
         self.title = title
         self.duration = duration
         self.urlString = urlString
         self.extImgURLString = imgUrlString
+        if let properties {
+            self.properties = properties
+        }
+        super.init()
+    }
+    public init(title: String, duration: Double, properties: [String: String]?) {
+        self.title = title
+        self.duration = duration
+        if let properties {
+            self.properties = properties
+        }
         super.init()
     }
     public override init() {

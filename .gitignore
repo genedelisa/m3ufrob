@@ -12,6 +12,7 @@ fastlane/slather/
 testcoverage-reports/
 # xcshareddata/
 Gemfile.lock
+testPlaylists/
 
 
 ### Xcode ###

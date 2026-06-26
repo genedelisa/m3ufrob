@@ -19,9 +19,10 @@
 
 import Foundation
 import os.log
+import RegexBuilder
 
 struct PlaylistParser {
-    
+    // used in tests
     func display(entries: [PlaylistEntry]) {
         let s = createContentString(entries: entries)
         print(s)
@@ -56,6 +57,7 @@ struct PlaylistParser {
         var parseState: ParseState = .begin
         
         var results = [PlaylistEntry]()
+        var comments = [String]()
         
         var entry = PlaylistEntry()
         
@@ -108,6 +110,11 @@ struct PlaylistParser {
                 
                 else if line.hasPrefix("#EXTINF") {
                     
+                    
+                    //TODO: handle properties too
+                    //#EXTINF:-1 tvg-id="Channel1" tvg-name="Channel 1" tvg-language="English" group-title="News" custom-attribute="hello",Channel 1
+
+                    
                     do {
                         let tup = try parseCmdLine(line)
                         Logger.playlist.debug("cmd: \(tup.cmd, privacy: .public)")
@@ -154,6 +161,11 @@ struct PlaylistParser {
                     
                 }
                 
+                else {
+                    Logger.playlist.debug("Plain comment: \(line, privacy: .public)")
+                    comments.append(line)
+                }
+                
                 
                 
             } // has prefix
@@ -193,13 +205,42 @@ struct PlaylistParser {
     func parseCmdLine(_ line: String) throws -> (cmd: String, dur:Double, title: String) {
         
         let regexp =
-        /(?<cmd>#EXTINF:)?[:space:]*(?<dur>[+-]?[[:space:][:digit:]\.]*)\s*,\s*(?<title>.*)/
-
+        /(?<cmd>#EXTINF:)?[[:space:]]*(?<dur>[+-]?[[:space:][:digit:]\.]*)\s*,+\s*(?<title>.*)/
+        
+        // tes - is to allow tg-foo names.
+        let nameValuePairRegexp = /(?<nv>[[:alnum:]-]*)/
+        
+        
         //        /(?<cmd>#EXTINF:)?(?<dur>[+-]?[[:space:][:digit:]\.]*)\s*,\s*(?<title>.*)/
 
+        // TODO: this is a mess too
         if line.contains("EXTINF") {
+            
+//            if let pe = parseEXTINFLine(line) {
+//                print("\(pe)")
+//            }
+//            
+//            
+//            do {
+//                if nameValuePairRegexp.contains(captureNamed: "nv") {
+//                    print("has nv")
+//                }
+//                if let result = try nameValuePairRegexp.wholeMatch(in: line) {
+//                    print("pair result: \(result)")
+//                } else {
+//                    print("no pair result: \(line)")
+//                }
+//            } catch {
+//                print("no regexp match for:")
+//                print("\(line)\n")
+//                print("\(error)\n")
+//            }
+
+
+
+            
             do {
-                
+
                 // if let result = try regexp.wholeMatch(in: line.dropFirst()) {
                 if let result = try regexp.wholeMatch(in: line) {
                     //                    print("Cmd: \(result.cmd)")
@@ -233,6 +274,108 @@ struct PlaylistParser {
         
         
     }
+    
+    
+    /// Parses a single #EXTINF line using Swift 5.7 Regex literals (no DSL) to extract duration, title, and optional properties.
+    private func parseEXTINFLine(_ line: String) -> PlaylistEntry? {
+        let prefix = "#EXTINF:"
+        guard line.hasPrefix(prefix) else { return nil }
+        let rest = line.dropFirst(prefix.count)
+
+        // Find first comma not inside quotes
+        guard let commaIndex = indexOfUnquotedComma(in: rest) else { return nil }
+
+        let leftPart = rest[..<commaIndex].trimmingCharacters(in: .whitespaces)
+        let title = rest[rest.index(after: commaIndex)...].trimmingCharacters(in: .whitespaces)
+        guard !title.isEmpty else { return nil }
+
+        
+        //TODO: fix this regexp mess
+        
+        // Regex pattern string (no DSL):
+        // For entire leftPart: ^(-?\d+(?:\.\d+)?)(?:\s+(.*))?$
+        
+        // raw Swing string
+        //let pattern = #"^(-?\d+(?:\.\d+)?)(?:\s+(.*))?$"#
+        let pattern = #"^(-?\d+(\.\d+)?)(\s+(.*))?$"#
+        
+        let durPattern = #"(?<dur>[+-]?[[:space:]*[:digit:]\.]*)"#
+        let nvPattern = #"(?<name>[a-zA-Z0-9-]+)="(?<val>[^"]*)"#
+
+//        let regex:Regex<(Substring, Substring, Substring?, Substring?, Substring?)>
+        let regex:Regex<(Substring, dur:Substring)>
+//        let regex:Regex<(Substring, Substring?)>
+        do {
+//            try regex = Regex<(Substring, Substring?)>(pattern)
+            try regex = Regex<(Substring,  dur:Substring)>(durPattern)
+//            try regex = Regex<(Substring, Substring ,Substring?, Substring?, Substring?)>(durPattern)
+//            try regex = Regex<(Substring, Substring ,Substring?, Substring?, Substring?)>(pattern)
+        } catch  {
+            print("Invalid regex \(pattern)")
+            print(" \(error)")
+            return nil
+        }
+
+//        guard let regex = try? Regex<(Substring, Substring?)>(pattern) else {
+//            print("Invalid regex \(pattern)")
+//            return nil
+//        }
+        guard let match = leftPart.wholeMatch(of: durPattern) else {
+            print("no match for regex")
+            print("\(regex) with \(line)")
+            return nil
+        }
+        
+//        guard let match = leftPart.wholeMatch(of: regex) else {
+//            print("no match for regex")
+//            print("\(regex) with \(line)")
+//            return nil
+//        }
+
+        // match.output is a tuple containing capture groups (duration, optional properties)
+//        let durationStr = String(match.output.0)
+//        guard let duration = Double(durationStr) else { return nil }
+let duration = Double(0)
+//        let propertiesString = match.output.1 ?? ""
+//
+//        // Parse all key="value" pairs in propertiesString using regex
+//        // pattern: ([a-zA-Z0-9-]+)="([^"]*)"
+//        let kvRegex = try! Regex<(Substring, Substring)>(#"([a-zA-Z0-9-]+)="([^"]*)""#)
+
+        // (?<name>[a-zA-Z0-9-]+)="(?<val>[^"]*)"
+
+        var properties: [String: String] = [:]
+//        for match in propertiesString.matches(of: kvRegex) {
+//            let key = String(match.output.0)
+//            let value = String(match.output.1)
+//            properties[key] = value
+//        }
+
+        return PlaylistEntry(title: String(title), duration: duration, properties: properties)
+    }
+
+
+
+    // Finds first comma not inside double quotes
+    private func indexOfUnquotedComma(in substring: Substring) -> Substring.Index? {
+        var insideQuotes = false
+        for (idx, char) in substring.enumerated() {
+            if char == "\"" {
+                insideQuotes.toggle()
+            } else if char == "," && !insideQuotes {
+                return substring.index(substring.startIndex, offsetBy: idx)
+            }
+        }
+        return nil
+    }
+    
+
+
+    
+
+    
+    
+    
     
     func parseImgCmdLine(_ line: String) throws -> (cmd: String, val: String) {
 

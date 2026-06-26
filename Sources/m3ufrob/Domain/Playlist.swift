@@ -983,8 +983,10 @@ public class Playlist: Identifiable, ObservableObject {
             //            print("\(urlString)")
 
             var s = "#EXTM3U\n"
+
             if comments {
                 let d = Date().ISO8601Format()
+                s += "#PLAYLIST:Scraped \(d)\n"
                 s += "# Date: \(d)\n"
                 //s += "# Source: \(self.fileURL.absoluteString)\n"
                 s += "# Original Count: \(self.playlistEntries.count)\n"

@@ -329,8 +329,8 @@ class FileService: FileServiceProtocol, ObservableObject {
     
     func metaFrob() {
         
-        let url = URL(fileURLWithPath: "/Users/genedelisa/brewlist")
-        let item = NSMetadataItem(url: url)
+        //let url = URL(fileURLWithPath: "/Users/genedelisa/brewlist")
+        //let item = NSMetadataItem(url: url)
         
 //        if let item,
 //           let attributes = item.values(forAttrœibutes: item.attributes) {

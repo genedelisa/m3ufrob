@@ -80,7 +80,7 @@ extension MainCommand {
                     String(localized: "The filename of the input playlist.", comment: "")
             )
         )
-        var inputFile: String? = "-"
+        var inputFile: String = "-"
         
         // maybe
         // specify multiple files, sort/uniq them, then write to their invidual output file
@@ -199,11 +199,11 @@ extension MainCommand {
         
         func validate() throws {
             
-            if let inputFile {
+           // if let inputFile {
                 guard !inputFile.isEmpty else {
                     throw ValidationError("You need to set the input file")
                 }
-            }
+          //  }
         }
         
         func run() async throws {
@@ -218,12 +218,15 @@ extension MainCommand {
             
             
             if commonOptions.verbose {
-                let s = "input file name: \(inputFile ?? "no input file")".justify(.left)
+               // let s = "input file name: \(inputFile ?? "no input file")".justify(.left)
+                 //   .fg256(.aqua).bg256(.deepPink3)
+                let s = "input file name: \(inputFile)".justify(.left)
                     .fg256(.aqua).bg256(.deepPink3)
                 print(s)
                 
-                print("input file name: \(inputFile ?? "no input file")  ")
-                print("output file \(outputFileName ?? "output file not set")  ")
+//                print("input file name: \(inputFile ?? "no input file")  ")
+                print("input file name: \(inputFile)")
+                print("output file \(outputFileName ?? "output file not set")")
                 print("verbose \(commonOptions.verbose)")
             }
             
@@ -299,7 +302,7 @@ extension MainCommand {
                 var playlist: Playlist
                 var inputFileURL: URL?
                 
-                if let inputFile {
+               // if let inputFile {
                     Logger.command.debug("not inputDirectoryName branch")
                     Logger.command.debug("Processing file \(inputFile)")
                     //print("Processing file \(inputFile)".fg(.yellow))
@@ -357,7 +360,7 @@ extension MainCommand {
                             await playlist.load()
                             
                             for entry in playlist.playlistEntries {
-                                print("\(entry)")
+                                //print("\(entry)")
 
 //                                if entry.title == "badInput" {
 //                                    print("entry has bad input")
@@ -496,7 +499,7 @@ extension MainCommand {
                     } else if !basename {
                         playlist.displayPlaylist()
                     }
-                }
+               // }
             }
         }
     }
