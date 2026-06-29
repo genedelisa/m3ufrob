@@ -20,6 +20,28 @@ import Foundation
 
 public struct HTMLEmitter {
     
+    /// Removes surrounding single or double quotes from a string if present.
+    /// - Parameter input: The string to process.
+    /// - Returns: The string without surrounding quotes.
+    static func removeSurroundingQuotes(from input: String) -> String {
+        // Ensure the string has at least 2 characters
+        guard input.count >= 2 else { return input }
+        
+        // Get first and last characters
+        if let first = input.first, let last = input.last {
+            // Check if both are matching quotes
+            if (first == "\"" && last == "\"") || (first == "'" && last == "'") {
+                // Remove the first and last characters
+                let startIndex = input.index(after: input.startIndex)
+                let endIndex = input.index(before: input.endIndex)
+                return String(input[startIndex..<endIndex])
+            }
+        }
+        
+        // Return unchanged if not quoted
+        return input
+    }
+
     // MARK: - Function to run yt-dlp
     static func getDirectVideoURL(from pageURL: String) -> String? {
         let process = Process()
@@ -160,6 +182,7 @@ body {
     }
 }
 """
+        var titlesToRemove: [String] = []
         
         // MARK: - Resolve all direct URLs
         for i in playlist.sortedEntries.indices {
@@ -169,8 +192,18 @@ body {
                 print("✅ Found direct URL")
             } else {
                 print("❌ Could not get direct URL for \(playlist.sortedEntries[i].title)")
+//                playlist.sortedEntries.remove(at: i)
+                titlesToRemove.append(playlist.sortedEntries[i].title)
             }
         }
+        
+        for title in titlesToRemove {
+            playlist.sortedEntries = playlist.sortedEntries.filter { $0.title != title }
+        }
+
+//        for index in indexesToRemove {
+//            playlist.sortedEntries.remove(at: index)
+//        }
         
         
         // MARK: - Embedded JavaScript
@@ -178,9 +211,14 @@ body {
 const videoData = [
 """
         for (i, video) in playlist.sortedEntries.enumerated() {
+            var imgURL = video.extImgURLString
+            imgURL = removeSurroundingQuotes(from: imgURL)
+            if imgURL.isEmpty {
+                imgURL="https://placehold.co/400x250?text=\(video.title)"
+            }
             embeddedJS += """
             {
-            preview: \(video.extImgURLString),
+            preview: "\(imgURL)",
             src: "\(video.directURLString)",
             title: "\(video.title)",
             desc: "\(video.title)"
@@ -308,7 +346,7 @@ document.addEventListener("keydown", (e) => {
         let fullHTML = htmlStart + htmlBody
         
         do {
-            try fullHTML.write(to: URL(fileURLWithPath: "index.html"), atomically: true, encoding: .utf8)
+            try fullHTML.write(to: URL(fileURLWithPath: path ?? "index.html"), atomically: true, encoding: .utf8)
             print("✅ index.html generated successfully.")
         } catch {
             print("❌ Error writing HTML file: \(error)")
