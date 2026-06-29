@@ -941,7 +941,170 @@ public class Playlist: Identifiable, ObservableObject {
 //        public var extImgURLString: String = ""
 //        public var originalExtinf: String = ""
 
-        var s = "<html>\n<body>\n"
+//        var s = "<html>\n<body>\n"
+        
+        
+        HTMLEmitter.displayPlaylistAsHTML(self, path:path, comments: comments)
+        
+        return
+        
+        
+        
+        var s = ""
+        var top="""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>m3ufrob Image Display</title>
+        <!-- <link rel="stylesheet" href="lightbox.css"> -->
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #fafafa;
+                color: #333;
+            }
+
+            header {
+                background: linear-gradient(135deg, #4a90e2, #357abd);
+                color: white;
+                padding: 20px;
+                text-align: center;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            }
+
+            header h1 {
+                font-size: 2rem;
+                letter-spacing: 1px;
+            }
+
+            .gallery {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                padding: 20px;
+                max-width: 1200px;
+                margin: auto;
+            }
+
+            .image-card {
+                position: relative;
+                overflow: hidden;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                cursor: pointer;
+            }
+
+            .image-card img {
+                width: 100%;
+                height: auto;
+                display: block;
+                transition: transform 0.4s ease, filter 0.4s ease;
+            }
+
+            .overlay {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.6);
+                color: #fff;
+                padding: 10px;
+                text-align: center;
+                font-size: 14px;
+                opacity: 0;
+                transition: opacity 0.4s ease;
+            }
+
+            .image-card:hover img {
+                transform: scale(1.08);
+                filter: brightness(1.1);
+            }
+
+            .image-card:hover .overlay {
+                opacity: 1;
+            }
+
+            /* Lightbox styles */
+            .lightbox {
+                display: none;
+                position: fixed;
+                z-index: 9999;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.9);
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+            }
+
+            .lightbox img {
+                max-width: 90%;
+                max-height: 80%;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            }
+
+            .lightbox .close,
+            .lightbox .prev,
+            .lightbox .next {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 2rem;
+                color: white;
+                background: rgba(0,0,0,0.5);
+                padding: 10px;
+                border-radius: 50%;
+                cursor: pointer;
+                user-select: none;
+            }
+
+            .lightbox .close {
+                top: 20px;
+                right: 20px;
+                transform: none;
+            }
+
+            .lightbox .prev {
+                left: 20px;
+            }
+
+            .lightbox .next {
+                right: 20px;
+            }
+        </style>
+        </head>        
+        
+        <body>
+        """
+        s+="\(top)\n"
+        
+        
+//        <div class="gallery">
+//            <div class="image-card">
+//                <img src="https://placeholdit.com/800/black/white" alt="Sample Image 1">
+//                <div class="overlay">Sample Image 1</div>
+//            </div>
+
+        s += "<header>\n"
+        s += "<h1>\n"
+        s += "Gallery\n"
+        s += "</h1>\n"
+        s += "</header>\n"
+        
+        s += "<div class=\"gallery\">\n"
+        
         for f in sortedEntries {
 //            for (k,v) in f.commmands {
 //                s += "#\(k): \n"
@@ -953,17 +1116,96 @@ public class Playlist: Identifiable, ObservableObject {
 //            } else {
 //                s += "<p>\(f.title)\"</p>\n"
 //            }
+            
+            s += "<div class=\"image-card\">\n"
 
-            s += "<div>\n"
-            s += "<p>\(f.title) - \(f.duration)</p>\n"
-            s += "<a href=\"\(f.urlString)\">\n"
-//            s += "<img src=\"\(f.extImgURLString)\"</img>\n"
+            if !f.extImgURLString.isEmpty {
+                s += "<img src=\(f.extImgURLString) alt=\"\(f.title)\"></img>\n"
+            } else {
+                s += "<img src=\(f.urlString) alt=\"\(f.title)\"></img>\n"
+            }
 
-            // <img src="img_girl.jpg" alt="Girl in a jacket" width="500" height="600">
-            s += "<img src=\(f.extImgURLString) alt=\"\(f.title)\"></img>\n"
-            s += "</a>\n"
+            s += "<div class=\"overlay\">"
+            s += "\(f.title) - \(f.duration)</div>\n"
             s += "</div>\n\n"
+            
         }
+        // s += "<img src=\"\(f.extImgURLString)\"</img>\n"
+        // <img src="img_girl.jpg" alt="Girl in a jacket" width="500" height="600">
+
+        // gallery
+        s += "</div>\n"
+
+        
+        let lightbox="""
+        <!-- Lightbox -->
+        <div class="lightbox" id="lightbox">
+            <span class="close" id="closeBtn">&times;</span>
+            <span class="prev" id="prevBtn">&#10094;</span>
+            <img id="lightboxImg" src="" alt="">
+            <span class="next" id="nextBtn">&#10095;</span>
+        </div>
+
+        <script>
+            const images = document.querySelectorAll('.gallery img');
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightboxImg');
+            const closeBtn = document.getElementById('closeBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            let currentIndex = 0;
+
+            // Open lightbox
+            images.forEach((img, index) => {
+                img.addEventListener('click', () => {
+                    currentIndex = index;
+                    showImage();
+                    lightbox.style.display = 'flex';
+                });
+            });
+
+            // Show image in lightbox
+            function showImage() {
+                lightboxImg.src = images[currentIndex].src;
+            }
+
+            // Close lightbox
+            closeBtn.addEventListener('click', () => {
+                lightbox.style.display = 'none';
+            });
+
+            // Navigate prev
+            prevBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+                showImage();
+            });
+
+            // Navigate next
+            nextBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex + 1) % images.length;
+                showImage();
+            });
+
+            // Close on background click
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox) {
+                    lightbox.style.display = 'none';
+                }
+            });
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (lightbox.style.display === 'flex') {
+                    if (e.key === 'ArrowLeft') prevBtn.click();
+                    if (e.key === 'ArrowRight') nextBtn.click();
+                    if (e.key === 'Escape') closeBtn.click();
+                }
+            });
+        </script>
+"""
+        s+="\(lightbox)\n"
+        
          s += "</body>\n<html>\n"
 
         print(s)

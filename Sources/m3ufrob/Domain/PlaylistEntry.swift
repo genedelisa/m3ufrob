@@ -32,6 +32,7 @@ public class PlaylistEntry: NSObject, ObservableObject, Identifiable {
     public var title: String = ""
     public var duration: Double = 0.0
     public var urlString: String = ""
+    public var directURLString: String = ""
     public var extImgURLString: String = ""
     public var originalExtinf: String = ""
     public var properties: [String: String] = [:]

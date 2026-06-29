@@ -1,0 +1,10 @@
+#EXTM3U
+# Original Count: 3
+# Unique Count: 2
+
+#EXTINF:20.0,bar and some text
+https://crap.com/videos/
+
+#EXTINF:20.0,foo and bar
+https://crap.com/videos/
+

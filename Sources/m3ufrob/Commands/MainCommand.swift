@@ -1,8 +1,5 @@
-//
-// File:         MainCommand.swift
-// Project:    m3ufrob
-// Package: m3ufrob
-// Product:  
+// File: MainCommand.swift
+// Project: m3ufrob
 //
 // Created by Gene De Lisa on 5/4/23
 //
@@ -30,7 +27,7 @@ import GDTerminalColor
 @available(macOS 10.15, *)
 @main
 struct MainCommand: AsyncParsableCommand {
-    static let version = "0.1.0"
+    static let version = "0.1.5"
     
     static var configuration = CommandConfiguration(
         commandName: "m3ufrob",

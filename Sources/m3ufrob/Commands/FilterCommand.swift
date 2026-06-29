@@ -1,8 +1,6 @@
 //
-// File:         Sources
-// Project:    m3ufrob
-// Package: m3ufrob
-// Product:  
+// File: FilterCommand.swift
+// Project: m3ufrob
 //
 // Created by Gene De Lisa on 5/4/23
 //
@@ -31,7 +29,7 @@ import AppKit
 extension MainCommand {
     
     struct FilterCommand:  AsyncParsableCommand {
-        static let version = "0.1.0"
+        static let version = "0.1.1"
         
         static var configuration = CommandConfiguration(
             commandName: "filter",
@@ -169,6 +167,17 @@ extension MainCommand {
         )
         public var color: Bool = false
         
+        @Flag(
+            name: [.long],
+            help:
+                ArgumentHelp(
+                    String(localized: "interactive", comment: ""),
+                    discussion:
+                        String(localized: "Prompt the user", comment: "")
+                )
+        )
+        public var interactive: Bool = false
+        
         
         @OptionGroup() var commonOptions: Options
         
@@ -188,7 +197,21 @@ extension MainCommand {
             var filtered = [PlaylistEntry]()
 
             for entry in playlist.sortedEntries {
-                
+
+//                if let result = try? search2.wholeMatch(in: greeting2) {
+//                    print("Name: \(result.name)")
+//                    print("Age: \(result.age)")
+//                }
+
+//                print("RE: \(re.regex)")
+//                if let result = try? re.wholeMatch(in: entry.title) {
+//                    print("Result: \(result)")
+//
+//                }
+
+//                let combined = try Regex("(?=.*\(term1))(?=.*\(term2))")
+//                let containsBoth = text.contains(combined)
+
                 if entry.title.contains(re) {
                     if remove {
                         if let index = playlist.sortedEntries.firstIndex(of: entry) {
@@ -211,6 +234,21 @@ extension MainCommand {
 
         }
         
+        func containsBothTerms(_ text: String, _ a: String, _ b: String) -> Bool {
+            do {
+                let r1 = try Regex(a)
+                let r2 = try Regex(b)
+                return text.contains(r1) && text.contains(r2)
+            } catch {
+                return false
+            }
+        }
+        
+        static func lookaheadRegex(from terms: [String]) throws -> Regex<AnyRegexOutput> {
+               let pattern = terms.map { "(?=.*\($0))" }.joined()
+               return try Regex(pattern)
+           }
+        
         func run() async throws {
             
             guard #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) else {
@@ -225,6 +263,10 @@ extension MainCommand {
                 print("output file \(outputFileName ?? "output file not set")  ")
                 print("verbose \(commonOptions.verbose)")
             }
+//            if MainCommand.FilterCommand.version {
+//                print("version: \(MainCommand.FilterCommand.version)")
+//                FilterCommand.exit(withError: ExitCode.success)
+//            }
             
             if inputFileNames.count > 0 {
                 
@@ -245,13 +287,17 @@ extension MainCommand {
                 let merged = await Playlist.mergePlaylists(playlists: playlists)
                 
                 if commonOptions.verbose {
-                    print("merged count: \(merged.playlistEntries.count)")
-                    print("There are \(merged.playlistEntries.count) entries.")
-                    print("View them? y/n")
-                    
-                    let y = Character("y").asciiValue!
-                    let ch = getch()
-                    if ch == y {
+                    if interactive {
+                        print("merged count: \(merged.playlistEntries.count)")
+                        print("There are \(merged.playlistEntries.count) entries.")
+                        print("View them? y/n")
+                        
+                        let y = Character("y").asciiValue!
+                        let ch = getch()
+                        if ch == y {
+                            merged.displayPlaylist()
+                        }
+                    } else {
                         merged.displayPlaylist()
                     }
                 }
@@ -282,20 +328,40 @@ extension MainCommand {
                         print("patterns \(pattern)")
                     }
                     
-                    let thePattern: String
+                    var thePattern: String
                     
                     if patternOr {
                         // to or the patterns
                         thePattern = pattern.map { "(\($0))" }.joined(separator: "|")
                         //print("combinedOrPattern \(thePattern)")
                     } else if patternAnd {
-                        thePattern = pattern.map { "(\($0))" }.joined(separator: "&")
+                        //thePattern = pattern.map { "\($0)" }.joined(separator: "&")
+                        //thePattern = "(\(thePattern))"
+
+                        //works thePattern = "(?=.*\(pattern[0]))(?=.*\(pattern[1]))"
+                        thePattern = pattern.map { "(?=.*\($0))" }.joined()
+                        
+//                        let combinedRegex = try Regex("(?=.*\(pattern[0]))(?=.*\(pattern[1]))")
+//                            .ignoresCase(true)
+                        
+//                        let regex = try lookaheadRegex(from: pattern)
+
+
                     } else {
                         // Combine patterns by concatenation.
                         thePattern = pattern.joined()
                         //print("combinedPattern \(thePattern)")
                     }
+                    
+//                    if containsBothTerms(<#T##text: String##String#>, pattern[0], pattern[1]) {
+//                        
+//                    }
+                   
+                    //let combinedRegex = try Regex("(?=.*\(term1))(?=.*\(term2))")
+                    //let containsBoth = text.contains(combinedRegex)
 
+                    print("thePattern \(thePattern)")
+                    
                     let regex: Regex<AnyRegexOutput>
                     do {
                         regex = try Regex(thePattern).ignoresCase(true)
