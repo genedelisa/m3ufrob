@@ -42,6 +42,7 @@ extension MainCommand {
               xcrun swift run m3ufrob byhost filename -v -o output.m3u8
               xcrun swift run m3ufrob byhost --input-directory-name ~/Video/test-playlists
               xcrun swift run m3ufrob byhost --list-hosts playlist
+              xcrun swift run m3ufrob byhost --extract-all-hosts --basename whatever.m3u8
               """,
             version: version
         )
@@ -113,6 +114,19 @@ extension MainCommand {
         public var listHosts: Bool = false
         
         @Flag(
+            name: [.long],
+            inversion: .prefixedNo,
+            exclusivity: .exclusive,
+            help:
+                ArgumentHelp(
+                    String(localized: "Extract entries according to hostnames in the input playlist", comment: ""),
+                    discussion:
+                        String(localized: "Extract entries according to the input playlist.", comment: "")
+                )
+        )
+        public var extractAllHosts: Bool = false
+        
+        @Flag(
             //name: [.short],
             inversion: .prefixedNo,
             exclusivity: .exclusive,
@@ -134,6 +148,45 @@ extension MainCommand {
                     throw ValidationError("You need to set the input file")
                 }
             }
+        }
+
+        func savePlaylist(inputFileURL: URL, pl:Playlist, selectedHost:String ) async throws {
+            let pasteboard: NSPasteboard = .general
+            pasteboard.declareTypes([NSPasteboard.PasteboardType.string], owner: nil)
+            
+            if basename {
+               let bname = inputFileURL.deletingPathExtension().lastPathComponent
+               let ext = inputFileURL.pathExtension
+               let parent = inputFileURL.deletingLastPathComponent()
+               let ppath = parent.path(percentEncoded: false)
+               // ppath has a trailing /
+               
+               var outputFileURL = URL(fileURLWithPath: ppath)
+               outputFileURL = outputFileURL.appending(path: "\(bname).\(selectedHost).\(ext)")
+               outputFileURL.resolveSymlinksInPath()
+               // for dealing with relative paths
+               outputFileURL.standardize()
+               pl.displayPlaylist(outputFileURL.path, comments: true)
+               print("\(outputFileURL.path)".fg(.orange))
+
+               pasteboard.setString(outputFileURL.path,
+                                    forType: NSPasteboard.PasteboardType.string)
+               
+           } else if let path = outputFileName {
+               if commonOptions.verbose {
+                   let s = "Writing to: \(path)".justify(.left)
+                       .fg256(.aquamarine1).bg256(.deepPink3)
+                   print(s)
+               }
+               //pl.displayPlaylist(path)
+               pl.displayPlaylist(path, comments: true)
+               
+               pasteboard.setString(path, forType: .string)
+               
+           } else if !basename {
+               pl.displayPlaylist()
+               //pl.displayPlaylist(path, comments: true)
+           }
         }
         
         func run() async throws {
@@ -181,6 +234,40 @@ extension MainCommand {
                 }
                 playlist.removeDuplicates()
                 
+                let groupedByHost = Dictionary(grouping: playlist.playlistEntries) { (entry) -> String in
+                    if let h = entry.getHost() {
+                        return h
+                    }
+                    return ""
+                }
+                
+                if extractAllHosts {
+                    if commonOptions.verbose {
+                        print("Extract hosts")
+                    }
+                    var hosts = Set<String>()
+                    for entry in playlist.playlistEntries {
+                        if let host = entry.getHost() {
+                            hosts.insert(host)
+                        }
+                    }
+                    for selectedHost in hosts {
+                        print("selectedHost \(selectedHost)")
+                        
+                        if let entries = groupedByHost[selectedHost] {
+                            let pl = Playlist(entries: entries)
+                            pl.removeDuplicates()
+                            
+                            do {
+                                try await savePlaylist(inputFileURL: inputFileURL, pl:pl, selectedHost:selectedHost )
+                            } catch {
+                                print("\(error)")
+                            }
+                        }
+                    }
+                    return
+                }
+                
                 if listHosts {
                     if commonOptions.verbose {
                         print("Available hosts")
@@ -208,12 +295,7 @@ extension MainCommand {
                 }
 
                 
-                let groupedByHost = Dictionary(grouping: playlist.playlistEntries) { (entry) -> String in
-                    if let h = entry.getHost() {
-                        return h
-                    }
-                    return ""
-                }
+                
                 
                 if let entries = groupedByHost[selectedHost] {
                     let pl = Playlist(entries: entries)
@@ -269,6 +351,8 @@ extension MainCommand {
                     }
                 }
                 
+            } else {
+                print("Need an input file!")
             }
         }
     }

@@ -68,6 +68,22 @@ extension MainCommand {
         )
         var save = false
         
+        @Flag(
+            help:
+                ArgumentHelp(
+                    String(
+                        localized: "Save bad links to a file.",
+                        comment: ""),
+                    discussion:
+                        String(
+                            localized: "Save bad links to a file with the same basename.",
+                            comment: "")
+                )
+        )
+        var saveBad = false
+
+        
+        
         @Option(
             name: [.long],
             help: ArgumentHelp(
@@ -207,7 +223,39 @@ extension MainCommand {
                     FileService.shared.append(string: "\(link.extInf)\n", to: outputURL)
                     FileService.shared.append(string: "\(link.urlString)\n\n", to: outputURL)
                 }
+                if commonOptions.verbose {
+                    print("Saved to \(outputURL.absoluteString)".fg(.red))
+                }
+
             }
+            if saveBad {
+                
+                var base = outputFile
+                if self.outputFile.isEmpty {
+                    base = URL(filePath: inputFile).deletingPathExtension().lastPathComponent
+                }
+                base += ".bad"
+                let outputURL = createSaveURL(basename: base)
+                
+                FileService.shared.write(string: "#EXTM3U\n\n", to: outputURL)
+                
+                let df = ISO8601DateFormatter()
+                let now = df.string(from: Date())
+                FileService.shared.write(string: "# \(now)\n\n", to: outputURL)
+                
+                for link in badLinks {
+                    if commonOptions.verbose {
+                        print("Writing \(link)".fg(.dodgerBlue))
+                    }
+                    FileService.shared.append(string: "\(link.extInf)\n", to: outputURL)
+                    FileService.shared.append(string: "\(link.urlString)\n\n", to: outputURL)
+                }
+                if commonOptions.verbose {
+                    print("Saved to \(outputURL.absoluteString)".fg(.red))
+                }
+
+            }
+
         }
         
         func createSaveURL(basename: String) -> URL {
